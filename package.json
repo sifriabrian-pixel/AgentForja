@@ -1,0 +1,21 @@
+{
+  "name": "forja-agente",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agente de WhatsApp para Forja Propiedades (Sifer)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test --test-timeout=10000 test/*.test.js",
+    "qa": "node qa/run.js",
+    "sync-tokko": "node scripts/sync-tokko.js"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^18.0.6"
+  }
+}

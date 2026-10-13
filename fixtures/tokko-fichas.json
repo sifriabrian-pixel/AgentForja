@@ -1,0 +1,979 @@
+{
+  "_nota": "Fichas reales tomadas de forjapropiedades.com (oct 2026), en el formato de la API de Tokko. Tres datos son de ejemplo porque la web no los publica: reference_code, status (la 7162783 está marcada como reservada) y la operación \"Alquiler temporario\" de la 8638853 (en la web figura como alquiler común).",
+  "meta": {
+    "total_count": 8
+  },
+  "objects": [
+    {
+      "id": 7162783,
+      "reference_code": "FHO7162783",
+      "publication_title": "Casa en barrio privado Miraflores",
+      "address": "|APTO CREDITO| Casa en una sola planta con 3 dormitorios, pileta y jardín | Funes Hills - Miraflores",
+      "fake_address": "|APTO CREDITO| Casa en una sola planta con 3 dormitorios, pileta y jardín | Funes Hills - Miraflores",
+      "real_address": "|APTO CREDITO| Casa en una sola planta con 3 dormitorios, pileta y jardín | Funes Hills - Miraflores",
+      "description": "Venta – Casa Reciclada a Nueva – Funes Hills Miraflores            \n- Casa de 3 dormitorios en una sola planta, ubicada sobre el boulevard principal. Reciclada completamente en 2025, con excelente calidad constructiva y detalles de diseño.\n- Distribución:\n|Cocina integrada con barra desayunadora, horno empotrado, anafe, campana y gran espacio de guardado\n|Estar comedor con doble vista al jardín\n|Espacio tipo escritorio/lectura en entrepiso\n|Lavadero sectorizado + toilette\n- Dormitorio principal en suite con bañera, ducha y vestidor\n- 2 dormitorios secundarios + baño completo con antebaño\n- Galería con parrillero, jardín forestado y pileta con solárium húmedo\n|Cochera techada para un auto\n- Detalles:\n|Pisos de porcelanato y madera de ingeniería\n|Aberturas DVH\n|Climatización central\n|Termotanque eléctrico\n- Techos planos e inclinados con aislante\n| Ubicación:\nTerreno central de 800 m² (20x40), próximo al ingreso. Seguridad 24 hs, amplios espacios verdes, ingreso por rotonda, a 15 minutos de Rosario.\n| Escriturada | Apto crédito | Entrega inmediata | Posibilidad de permuta | Lote lindero disponible\n| Barrio Privado Funes Hills Miraflores – Funes, Santa Fe\nForja Propiedades\nSebastián Bileckiz Mat. 2204",
+      "type": {
+        "id": 3,
+        "code": "HO",
+        "name": "Casa"
+      },
+      "operations": [
+        {
+          "operation_type": "Venta",
+          "prices": [
+            {
+              "currency": "USD",
+              "price": 459999,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "Miraflores (Funes Hills)",
+        "full_location": "Argentina | Santa Fe | Funes | Miraflores (Funes Hills)",
+        "short_location": "Funes | Miraflores (Funes Hills)"
+      },
+      "status": 3,
+      "room_amount": 5,
+      "suite_amount": 3,
+      "bathroom_amount": 3,
+      "parking_lot_amount": 1,
+      "age": 0,
+      "surface": "250",
+      "total_surface": "250",
+      "roofed_surface": "220",
+      "semiroofed_surface": "30",
+      "unroofed_surface": "0",
+      "expenses": 0,
+      "orientation": "Oeste",
+      "disposition": null,
+      "property_condition": "Excelente",
+      "tags": [
+        {
+          "id": 1,
+          "name": "Agua Corriente",
+          "type": 1
+        },
+        {
+          "id": 2,
+          "name": "Gas Natural",
+          "type": 1
+        },
+        {
+          "id": 3,
+          "name": "Electricidad",
+          "type": 1
+        },
+        {
+          "id": 4,
+          "name": "Cocina",
+          "type": 1
+        },
+        {
+          "id": 5,
+          "name": "Comedor diario",
+          "type": 1
+        },
+        {
+          "id": 6,
+          "name": "Jardín",
+          "type": 1
+        },
+        {
+          "id": 7,
+          "name": "Lavadero",
+          "type": 1
+        },
+        {
+          "id": 8,
+          "name": "Living comedor",
+          "type": 1
+        },
+        {
+          "id": 9,
+          "name": "Patio",
+          "type": 1
+        },
+        {
+          "id": 10,
+          "name": "Toilette",
+          "type": 1
+        },
+        {
+          "id": 11,
+          "name": "Vestidor",
+          "type": 1
+        },
+        {
+          "id": 12,
+          "name": "Aire Acondicionado individual",
+          "type": 1
+        },
+        {
+          "id": 13,
+          "name": "Amoblado",
+          "type": 1
+        },
+        {
+          "id": 14,
+          "name": "Parrilla",
+          "type": 1
+        },
+        {
+          "id": 15,
+          "name": "Quincho",
+          "type": 1
+        },
+        {
+          "id": 16,
+          "name": "Solarium",
+          "type": 1
+        },
+        {
+          "id": 17,
+          "name": "Pileta",
+          "type": 1
+        },
+        {
+          "id": 18,
+          "name": "Escritorio",
+          "type": 1
+        },
+        {
+          "id": 19,
+          "name": "Guarda de seguridad",
+          "type": 1
+        },
+        {
+          "id": 20,
+          "name": "Luminoso",
+          "type": 1
+        },
+        {
+          "id": 21,
+          "name": "Calefacción por aire",
+          "type": 1
+        },
+        {
+          "id": 22,
+          "name": "Galería",
+          "type": 1
+        },
+        {
+          "id": 23,
+          "name": "Seguridad nocturna",
+          "type": 1
+        },
+        {
+          "id": 24,
+          "name": "Club House",
+          "type": 1
+        },
+        {
+          "id": 25,
+          "name": "Seguridad 24hs",
+          "type": 1
+        },
+        {
+          "id": 26,
+          "name": "Cancha de Tenis",
+          "type": 1
+        },
+        {
+          "id": 27,
+          "name": "Parrilla techada",
+          "type": 1
+        },
+        {
+          "id": 28,
+          "name": "Lavandería",
+          "type": 1
+        },
+        {
+          "id": 29,
+          "name": "Amenities",
+          "type": 1
+        },
+        {
+          "id": 30,
+          "name": "Sala de reuniones",
+          "type": 1
+        },
+        {
+          "id": 31,
+          "name": "Barrio privado",
+          "type": 1
+        }
+      ],
+      "public_url": "https://www.forjapropiedades.com/propiedades/venta-apto-credito-casa-en-una-sola-planta-con-3-dormitorios-pileta-y-jardin-funes-hills-miraflores",
+      "branch": {
+        "name": "Forja Rosario"
+      },
+      "geo_lat": "-32.9298342",
+      "geo_long": "-60.8397931",
+      "created_at": "2025-07-17T14:36:48",
+      "deleted_at": null
+    },
+    {
+      "id": 8563856,
+      "reference_code": "FHO8563856",
+      "publication_title": "Casa de 8 ambientes en Kentucky Club de Campo, Funes.",
+      "address": "Casa en Barrio Kentucky Club de Campo",
+      "fake_address": "Casa en Barrio Kentucky Club de Campo",
+      "real_address": "Casa en Barrio Kentucky Club de Campo",
+      "description": "VENTA – Casa de 5 Dormitorios con Pileta en Kentucky Club de Campo\nDescripción: Ingreso a una vivienda desarrollada en dos plantas, ubicada en Kentucky Club de Campo, diseñada con amplios espacios sociales y una distribución funcional.\nEn planta baja se encuentra el living, un escritorio, sala de estar, cocina con comedor semi integrado, lavadero, toilette y un dormitorio en suite. Además, cuenta con un quincho/galería con salida al jardín, cochera techada para dos vehículos y espacio descubierto para dos autos más.\nEn planta alta se desarrollan cuatro dormitorios, uno de ellos con salida a una terraza, y dos baños completos.\nTodos los dormitorios cuentan con iluminación y ventilación natural. La propiedad dispone de calefacción por radiadores en todos los ambientes, sistema de riego automático, ocho equipos de aire acondicionado tipo split y múltiples espacios de guardado.\nEn el exterior se encuentra una pileta con jacuzzi, equipada con bomba y filtro.\nObvservaciones: La propiedad requiere tareas de mantenimiento o refacciones, ofreciendo una excelente oportunidad para actualizarla y potenciar sus prestaciones dentro de uno de los barrios cerrados más reconocidos de la ciudad.",
+      "type": {
+        "id": 3,
+        "code": "HO",
+        "name": "Casa"
+      },
+      "operations": [
+        {
+          "operation_type": "Venta",
+          "prices": [
+            {
+              "currency": "USD",
+              "price": 980000,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "Kentucky",
+        "full_location": "Argentina | Santa Fe | Funes | Kentucky",
+        "short_location": "Funes | Kentucky"
+      },
+      "status": 2,
+      "room_amount": 8,
+      "suite_amount": 5,
+      "bathroom_amount": 4,
+      "parking_lot_amount": 0,
+      "age": 18,
+      "surface": "1200",
+      "total_surface": "0",
+      "roofed_surface": "0",
+      "semiroofed_surface": "0",
+      "unroofed_surface": "0",
+      "expenses": 0,
+      "orientation": "Oeste",
+      "disposition": null,
+      "property_condition": "Bueno",
+      "tags": [],
+      "public_url": "https://www.forjapropiedades.com/propiedades/venta-casa-en-barrio-kentucky-club-de-campo",
+      "branch": {
+        "name": "Forja Rosario"
+      },
+      "geo_lat": "-32.9405610797",
+      "geo_long": "-60.8286363",
+      "created_at": "2026-07-30T13:11:32",
+      "deleted_at": null
+    },
+    {
+      "id": 8638798,
+      "reference_code": "FAP8638798",
+      "publication_title": "Departamento de 2 dormitorios - Puerto Madero",
+      "address": "Departamento de 2 dormitorios - Puerto Madero",
+      "fake_address": "Departamento de 2 dormitorios - Puerto Madero",
+      "real_address": "Departamento de 2 dormitorios - Puerto Madero",
+      "description": "Increíble departamento semi amoblado en Torres Piso 8 sin cochera.\nImpresionante vista al río y a la ciudad en todos los ambientes. Todo aire, luz y sol. Edificio de súper categoría con todos los amenities.\n100 m2 totales en 3 ambientes. Palier privado, hall de recepción, living comedor con salida a balcón . Cocina comedor con barra integradora al living comedor, equipada con horno y cocina empotrados, microondas y heladera. Lavadero , gran alacena de guardado, lavarropas y salida a palier de servicio. 2 dormitorios en suite, a los que se accede a través de un pasillo de distribución. Dormitorio principal en suite con increíble vestidor, segundo dormitorio en suite con amplios placares .\nPisos de porcelanato símil madera. Aire acondicionado split frío calor en los ambientes.\nAmenities:, Juegos para niños, parque, Piscina climatizada , Salón de fiestas, Salón para niños, gimnasio, Seguridad 24 Hrs, Solarium, SUM, Vestuarios y baños para personal de servicio.\nDirección: Juana Manso 494                \nArnaldo Garcia - mat.5979",
+      "type": {
+        "id": 2,
+        "code": "AP",
+        "name": "Departamento"
+      },
+      "operations": [
+        {
+          "operation_type": "Venta",
+          "prices": [
+            {
+              "currency": "USD",
+              "price": 480000,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "Puerto Madero",
+        "full_location": "Argentina | Capital Federal | Puerto Madero ",
+        "short_location": "Capital Federal | Puerto Madero"
+      },
+      "status": 2,
+      "room_amount": 3,
+      "suite_amount": 2,
+      "bathroom_amount": 2,
+      "parking_lot_amount": 0,
+      "age": 0,
+      "surface": "100",
+      "total_surface": "100",
+      "roofed_surface": "0",
+      "semiroofed_surface": "12",
+      "unroofed_surface": "0",
+      "expenses": 0,
+      "orientation": null,
+      "disposition": "Frente",
+      "property_condition": null,
+      "tags": [
+        {
+          "id": 1,
+          "name": "Agua Corriente",
+          "type": 1
+        },
+        {
+          "id": 2,
+          "name": "Gas Natural",
+          "type": 1
+        },
+        {
+          "id": 3,
+          "name": "Internet",
+          "type": 1
+        },
+        {
+          "id": 4,
+          "name": "Electricidad",
+          "type": 1
+        },
+        {
+          "id": 5,
+          "name": "Balcón",
+          "type": 1
+        },
+        {
+          "id": 6,
+          "name": "Cocina",
+          "type": 1
+        },
+        {
+          "id": 7,
+          "name": "Comedor diario",
+          "type": 1
+        },
+        {
+          "id": 8,
+          "name": "Living comedor",
+          "type": 1
+        },
+        {
+          "id": 9,
+          "name": "Vestidor",
+          "type": 1
+        },
+        {
+          "id": 10,
+          "name": "Gimnasio",
+          "type": 1
+        },
+        {
+          "id": 11,
+          "name": "Solarium",
+          "type": 1
+        },
+        {
+          "id": 12,
+          "name": "SUM",
+          "type": 1
+        },
+        {
+          "id": 13,
+          "name": "Seguridad 24hs",
+          "type": 1
+        },
+        {
+          "id": 14,
+          "name": "Pileta climatizada",
+          "type": 1
+        },
+        {
+          "id": 15,
+          "name": "Salón para niños",
+          "type": 1
+        }
+      ],
+      "public_url": "https://www.forjapropiedades.com/propiedades/venta-departamento-de-2-dormitorios-puerto-madero",
+      "branch": {
+        "name": "Forja Buenos Aires"
+      },
+      "geo_lat": "-34.6003170177",
+      "geo_long": "-58.3638639979",
+      "created_at": "2026-08-12T16:30:20",
+      "deleted_at": null
+    },
+    {
+      "id": 10326813,
+      "reference_code": "FAP10326813",
+      "publication_title": "Departamento en Fisherton SAN EDUARDO",
+      "address": "Aurea Fisherton - 2 Dormitorios Premium - Schweitzer 8700",
+      "fake_address": "Aurea Fisherton - 2 Dormitorios Premium - Schweitzer 8700",
+      "real_address": "Aurea Fisherton - 2 Dormitorios Premium - Schweitzer 8700",
+      "description": "DEPARTAMENTO EN ALQUILER.\n        COMPLEJO DE VIVIENDAS, CALIDAD PREMIUM, DISEÑO Y CONFORT. AMBIENTES AMPLIOS Y MUY LUMINOSOS. IDEAL PARA DISFRUTAR DE UN BUEN LUGAR, SIN SALIR DE TU CASA. DEPARTAMENTO CON PARRILLERO EN BALCON.  COCHERAS DISPONIBLES U$S 20.000 CADA UNA\n-UNIDAD A ESTRENAR.\n-CALIDAD PREMIUM.\n-DETALLES DE CONFORT.\n-PUERTA DE SEGURIDAD SISTEM LOCK\n-PISOS PORCELANATO SIMIL MADERA. CALIDAD PORTOBELLO\n-SANITARIOS  Y GRIFERIAS CALIDAD ROCA Y PIAZZA\n-CALDERA DUAL CALDAIA (ADICIONAL)\n-RADIADORES (ADICIONAL)\n-PUERTAS INTERIOR OBLACK\n-ABERTURAS A30, DOBLE VIDRIO Y CAMARA DE AIRE\n-MUEBLES DE COCINA  CON DISEÑO Y CALIDAD PITAGORAS\n-2 BAÑOS AMPLIOS.\n-2 DORMITORIOS, 1 EN SUITE.\n-PLACARES AMPLIOS 3 PUERTAS, UNA ESPEJADA. INTERIORES TERMINADOS.\n-COCINA SEMI INTEGRADA AL ESTAR COMEDOR.\n-BALCON AMPLIO CON PARRILLERO\nRequisitos para alquilar:\nDemostración de ingresos del inquilino más una de estas opciones:\n1) 1 Garantía Propietaria + 3 Recibos de Sueldo\n2) 5 Recibos de Sueldo\n3) Empresa de Avales (Locativa)\nGastos del contrato:\nSellado Provincial (solo fojas): $1000\nInformes de garantías (aprox) : $ 80.000\nHonorarios: $ 1.742.400\nMes deposito en garantia: $ 1.200.000 (se dolariza)",
+      "type": {
+        "id": 2,
+        "code": "AP",
+        "name": "Departamento"
+      },
+      "operations": [
+        {
+          "operation_type": "Alquiler",
+          "prices": [
+            {
+              "currency": "ARS",
+              "price": 1200000,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "Fisherton",
+        "full_location": "Argentina | Santa Fe | Rosario | Fisherton",
+        "short_location": "Rosario | Fisherton"
+      },
+      "status": 2,
+      "room_amount": 3,
+      "suite_amount": 2,
+      "bathroom_amount": 2,
+      "parking_lot_amount": 1,
+      "age": 0,
+      "surface": "99",
+      "total_surface": "99",
+      "roofed_surface": "90",
+      "semiroofed_surface": "9",
+      "unroofed_surface": "0",
+      "expenses": 295000,
+      "orientation": "Noreste",
+      "disposition": "Frente",
+      "property_condition": "Excelente",
+      "tags": [
+        {
+          "id": 1,
+          "name": "Gas Natural",
+          "type": 1
+        },
+        {
+          "id": 2,
+          "name": "Balcón",
+          "type": 1
+        },
+        {
+          "id": 3,
+          "name": "Cocina",
+          "type": 1
+        },
+        {
+          "id": 4,
+          "name": "Comedor diario",
+          "type": 1
+        },
+        {
+          "id": 5,
+          "name": "Apto mascotas",
+          "type": 1
+        },
+        {
+          "id": 6,
+          "name": "Baño de servicio",
+          "type": 1
+        },
+        {
+          "id": 7,
+          "name": "Ascensor",
+          "type": 1
+        },
+        {
+          "id": 8,
+          "name": "Alumbrado público",
+          "type": 1
+        }
+      ],
+      "public_url": "https://www.forjapropiedades.com/propiedades/alquiler-aurea-fisherton-2-dormitorios-premium-schweitzer-8700",
+      "branch": {
+        "name": "Forja Rosario"
+      },
+      "geo_lat": "-32.9143879",
+      "geo_long": "-60.7515117",
+      "created_at": "2026-09-16T16:36:59",
+      "deleted_at": null
+    },
+    {
+      "id": 10496295,
+      "reference_code": "FAP10496295",
+      "publication_title": "Piso exclusivo de 3 dormitorios - Ayacucho 1300",
+      "address": "Piso exclusivo de 3 dormitorios - Ayacucho 1300",
+      "fake_address": "Piso exclusivo de 3 dormitorios - Ayacucho 1300",
+      "real_address": "Piso exclusivo de 3 dormitorios - Ayacucho 1300",
+      "description": "Ayacucho 1376\nEdificio de PB y 10 pisos con 3 unidades por planta hasta el 4to piso, (2 departamentos de 1 dormitorio., uno de 44 m2 y otro de 50 m2 al frente , ambos con salida a balcón de 1,50 m de ancho y un monoambiente de contrafrente de 32 m2) . A partir del piso 5 al 10 encontraremos pisos exclusivos de 3 dormitorios con , 2 baños , balcón terraza de 1.80 m2 a 11,50 m2 con parrillero de orientación Este de 125 m2) Solo los Piso Exclusivos van a tener acceso a la azotea con amenidades y a las 6 cocheras.\nUnidades disponibles: Piso 7 y Piso 10\nOpcional cochera USD 25.000\nENTREGA: 50/60% y saldo en 24 cuotas\nPOSESIÓN: NOVIEMBRE 2026\n125 m² con orientación Este•\t3 dormitorios y 2 baños\n•\tBalcón terraza de 1,80 x 11,50 m con parrillero\n Exclusivo para estas unidades\n•\tAcceso a la azotea con amenities\n•\tAcceso a las 6 cocheras del edificio (se negocian aparte)\nTerminaciones\n•\tPorcelanato en toda la unidad\n•\tAberturas Módena con DVH\n•\tCocina a medida con mesada de granito\n•\tPlacares completos\n•\tGriferías y sanitarios de primera marca\n•\tPre-instalación de AA\n•\tGas natural, y se entrega con calefactor en el living\nForja Propiedades - Mat. 2204",
+      "type": {
+        "id": 2,
+        "code": "AP",
+        "name": "Departamento"
+      },
+      "operations": [
+        {
+          "operation_type": "Venta",
+          "prices": [
+            {
+              "currency": "USD",
+              "price": 300000,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "Rosario",
+        "full_location": "Argentina | Santa Fe | Rosario ",
+        "short_location": "Santa Fe | Rosario"
+      },
+      "status": 2,
+      "room_amount": 4,
+      "suite_amount": 3,
+      "bathroom_amount": 2,
+      "parking_lot_amount": 1,
+      "age": -1,
+      "surface": "125",
+      "total_surface": "125",
+      "roofed_surface": "104",
+      "semiroofed_surface": "21",
+      "unroofed_surface": "0",
+      "expenses": 0,
+      "orientation": "Este",
+      "disposition": null,
+      "property_condition": null,
+      "tags": [
+        {
+          "id": 1,
+          "name": "Agua Corriente",
+          "type": 1
+        },
+        {
+          "id": 2,
+          "name": "Cloaca",
+          "type": 1
+        },
+        {
+          "id": 3,
+          "name": "Gas Natural",
+          "type": 1
+        },
+        {
+          "id": 4,
+          "name": "Internet",
+          "type": 1
+        },
+        {
+          "id": 5,
+          "name": "Electricidad",
+          "type": 1
+        },
+        {
+          "id": 6,
+          "name": "Cocina",
+          "type": 1
+        },
+        {
+          "id": 7,
+          "name": "Comedor diario",
+          "type": 1
+        },
+        {
+          "id": 8,
+          "name": "Living comedor",
+          "type": 1
+        },
+        {
+          "id": 9,
+          "name": "Balcón terraza",
+          "type": 1
+        }
+      ],
+      "public_url": "https://www.forjapropiedades.com/propiedades/venta-piso-exclusivo-de-3-dormitorios-ayacucho-1300",
+      "branch": {
+        "name": "Forja Rosario"
+      },
+      "geo_lat": "-32.9546902",
+      "geo_long": "-60.6286724",
+      "created_at": "2026-09-25T13:11:21",
+      "deleted_at": null
+    },
+    {
+      "id": 10502893,
+      "reference_code": "FHO10502893",
+      "publication_title": "Alquiler - Casa Amoblada en Barrio Cielo, Roldan - 1.800 USD",
+      "address": "Alquiler - Casa 3 Dorm. Amoblada con Pileta en Barrio Cielo, Roldan - 1.800 USD",
+      "fake_address": "Alquiler - Casa 3 Dorm. Amoblada con Pileta en Barrio Cielo, Roldan - 1.800 USD",
+      "real_address": "Alquiler - Casa 3 Dorm. Amoblada con Pileta en Barrio Cielo, Roldan - 1.800 USD",
+      "description": "ALQUILER CASA AMOBLADA – 3 DORMITORIOS – BARRIO PRIVADO EL CIELO, ROLDÁN\nExcelente casa amoblada de 3 dormitorios, con piscina, amplio jardín y espacios exteriores, ubicada en el exclusivo Barrio Privado El Cielo, Roldán.\n* VALOR: 1.800 USD\n* PLAZO DE CONTRATO: 12 meses\nDescripcion\nLa propiedad se desarrolla en dos plantas y se encuentra emplazada sobre un amplio terreno de 800 m², completamente parquizado y forestado.\nAl ingresar nos encontramos con un amplio y luminoso living comedor con techo de doble altura, que brinda una excelente sensación de amplitud.\nLa cocina se encuentra semiintegrada y cuenta con barra desayunadora, alacenas, amplia mesada y espacios de guardado.\nEn esta planta se encuentra además un dormitorio con ventana al frente y un baño completo con bañera.\nLos ambientes cuentan con pisos flotantes de PVC y calefacción mediante calefactores.\nMediante una escalera de madera se accede a la planta superior, donde se encuentran dos amplios dormitorios.\nEl dormitorio principal cuenta con placard, mientras que el segundo dormitorio dispone de ventana con vista al jardín.\nLa planta alta cuenta además con un baño completo.\nLos ambientes poseen calefacción y aire acondicionado.\nAmbos dormitorios cuentan con persianas y salida a un balcón aterrazado con vista al jardín.\nTodas las ventanas de la propiedad se encuentran equipadas con cortinas roller blackout.\nEXTERIOR\nLa propiedad ofrece un excelente espacio exterior, ideal para disfrutar durante todo el año:\n* Amplia galería cubierta.\n* Parrillero.\n* Mesada con bacha.\n* Espacio de guardado.\n* Baño de servicio.\n* Piscina de material.\n* Cuarto de guardado tipo depósito.\n* Amplio jardín parquizado y forestado.\nBARRIO PRIVADO EL CIELO\nUbicado sobre Ruta Nacional N.º 9, Roldán, a aproximadamente 1 km del cruce con AO12, con excelente acceso y conexión con Rosario.\nEl barrio cuenta con seguridad privada las 24 horas y un entorno tranquilo, con pocos lotes.\nEntre sus amenities se destacan:\n* Club House completamente equipado.\n* Piscina.\n* Cancha de tenis.\n* Sauna con vestuarios para damas y caballeros.\n* Sector de parrillas.\n* Juegos para niños.\n* Seguridad 24 horas.\n* Todos los servicios disponibles en el barrio.\nRequisitos para alquilar:Demostración de ingresos del inquilino más una de estas opciones:\n1) 1 Garantía Propietaria + 3 Recibos de Sueldo\n2) 5 Recibos de Sueldo\n3) Empresa de Avales (Locativa)\nGastos del contrato:\nSellado Provincial (solo fojas): $1000\nInformes de garantías (aprox) : $ 80.000\nHonorarios (5% + IVA): 2.610 USD\nMes deposito en garantia: 1.800 USD \nLa propiedad se alquila completamente amoblada y equipada, lista para habitar.\nUna excelente opción para quienes buscan una casa amplia, equipada y confortable, con piscina, jardín y seguridad, dentro de un barrio privado y a pocos minutos de Rosario.\nFORJA PROPIEDADES",
+      "type": {
+        "id": 3,
+        "code": "HO",
+        "name": "Casa"
+      },
+      "operations": [
+        {
+          "operation_type": "Alquiler",
+          "prices": [
+            {
+              "currency": "USD",
+              "price": 1800,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "El Cielo",
+        "full_location": "Argentina | Santa Fe | Roldán | El Cielo",
+        "short_location": "Roldán | El Cielo"
+      },
+      "status": 2,
+      "room_amount": 5,
+      "suite_amount": 3,
+      "bathroom_amount": 3,
+      "parking_lot_amount": 2,
+      "age": 20,
+      "surface": "140",
+      "total_surface": "0",
+      "roofed_surface": "140",
+      "semiroofed_surface": "0",
+      "unroofed_surface": "172",
+      "expenses": 700000,
+      "orientation": null,
+      "disposition": null,
+      "property_condition": "Excelente",
+      "tags": [
+        {
+          "id": 1,
+          "name": "Gas Natural",
+          "type": 1
+        },
+        {
+          "id": 2,
+          "name": "Internet",
+          "type": 1
+        },
+        {
+          "id": 3,
+          "name": "Electricidad",
+          "type": 1
+        },
+        {
+          "id": 4,
+          "name": "Cocina",
+          "type": 1
+        },
+        {
+          "id": 5,
+          "name": "Jardín",
+          "type": 1
+        },
+        {
+          "id": 6,
+          "name": "Living comedor",
+          "type": 1
+        },
+        {
+          "id": 7,
+          "name": "Patio",
+          "type": 1
+        },
+        {
+          "id": 8,
+          "name": "Amoblado",
+          "type": 1
+        },
+        {
+          "id": 9,
+          "name": "Gimnasio",
+          "type": 1
+        },
+        {
+          "id": 10,
+          "name": "Parrilla",
+          "type": 1
+        },
+        {
+          "id": 11,
+          "name": "SUM",
+          "type": 1
+        },
+        {
+          "id": 12,
+          "name": "Pileta",
+          "type": 1
+        },
+        {
+          "id": 13,
+          "name": "Ubicación tranquila",
+          "type": 1
+        },
+        {
+          "id": 14,
+          "name": "Luminoso",
+          "type": 1
+        },
+        {
+          "id": 15,
+          "name": "Agua Potable",
+          "type": 1
+        },
+        {
+          "id": 16,
+          "name": "Baño de servicio",
+          "type": 1
+        },
+        {
+          "id": 17,
+          "name": "Galería",
+          "type": 1
+        },
+        {
+          "id": 18,
+          "name": "Club House",
+          "type": 1
+        },
+        {
+          "id": 19,
+          "name": "Seguridad 24hs",
+          "type": 1
+        },
+        {
+          "id": 20,
+          "name": "Seguridad portería",
+          "type": 1
+        },
+        {
+          "id": 21,
+          "name": "Balcón terraza",
+          "type": 1
+        },
+        {
+          "id": 22,
+          "name": "Alumbrado público",
+          "type": 1
+        },
+        {
+          "id": 23,
+          "name": "Zonas Verdes",
+          "type": 1
+        },
+        {
+          "id": 24,
+          "name": "Cancha de Tenis",
+          "type": 1
+        },
+        {
+          "id": 25,
+          "name": "Lavarropas",
+          "type": 1
+        },
+        {
+          "id": 26,
+          "name": "Heladera",
+          "type": 1
+        },
+        {
+          "id": 27,
+          "name": "Pileta descubierta",
+          "type": 1
+        },
+        {
+          "id": 28,
+          "name": "Barrio privado",
+          "type": 1
+        }
+      ],
+      "public_url": "https://www.forjapropiedades.com/propiedades/alquiler-alquiler-casa-3-dorm-amoblada-con-pileta-en-barrio-cielo-roldan-1-800-usd",
+      "branch": {
+        "name": "Forja Rosario"
+      },
+      "geo_lat": "-32.9117742",
+      "geo_long": "-60.87392269999999",
+      "created_at": "2026-09-28T13:52:01",
+      "deleted_at": null
+    },
+    {
+      "id": 11170708,
+      "reference_code": "FAP11170708",
+      "publication_title": "Departamento - Puerto Norte",
+      "address": "AV CÁNDIDO CARBALLO al 200",
+      "fake_address": "AV CÁNDIDO CARBALLO al 200",
+      "real_address": "AV CÁNDIDO CARBALLO al 200",
+      "description": "LOFT EN FORUM PUERTO NORTE – PISO 7, COCHERA Y VISTA AL RÍO\nExcelente loft ubicado en \nForum Puerto Norte\n, uno de los desarrollos residenciales más exclusivo de Rosario.La unidad se encuentra en \n7° piso\n y cuenta con \nbalcón con vista al río\n, excelente luminosidad y una visual abierta que jerarquiza todo el ambiente.Dispone de un espacio amplio y funcional, con posibilidad de sectorizar cómodamente área de descanso, living y comedor.\nCochera incluida.\n Consultar disponibilidad de cochera doble. Forum Puerto Norte ofrece una propuesta integral de amenities y espacios comunes, ideal para disfrutar de una experiencia residencial completa:\n• Guardería Náutica • Parrilleros • SUM para 50 personas • Piscinas (exterior/para niños/climatizada)• Plaza de juegos con arena• Gimnasio• Sauna• Canchas de tenis• Sala de juegos• Box de masajes• Espacio destinado a yoga y actividades de bienestar • Amplios espacios verdes y áreas de recreación • Sectores comunes de uso exclusivo para residentes • Seguridad y entorno residencial de primer nivel\nTodo esto dentro de \nPuerto Norte\n, con cercanía al río, espacios gastronómicos, farmacias, servicios y excelentes accesos hacia distintos puntos de la ciudad.\nUna propiedad ideal tanto para \nvivienda propia como para inversión\n, combinando ubicación, vista, cochera y una amplia propuesta de amenities en uno de los complejos más reconocidos de Rosario.\n1) 1 Garantía Propietaria + 3 Recibos de Sueldo2) 5 Recibos de Sueldo3) Empresa de Avales (Locativa)Gastos del contrato:Sellado Provincial (solo fojas): $1000Informes de garantías (aprox) : $ 80.000Honorarios: $1.263.240Mes deposito en garantia: $870.000",
+      "type": {
+        "id": 2,
+        "code": "AP",
+        "name": "Departamento"
+      },
+      "operations": [
+        {
+          "operation_type": "Alquiler",
+          "prices": [
+            {
+              "currency": "ARS",
+              "price": 870000,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "Puerto Norte",
+        "full_location": "Argentina | Santa Fe | Rosario | Puerto Norte",
+        "short_location": "Rosario | Puerto Norte"
+      },
+      "status": 2,
+      "room_amount": 1,
+      "suite_amount": 0,
+      "bathroom_amount": 1,
+      "parking_lot_amount": 1,
+      "age": 0,
+      "surface": "0",
+      "total_surface": "0",
+      "roofed_surface": "0",
+      "semiroofed_surface": "0",
+      "unroofed_surface": "0",
+      "expenses": 0,
+      "orientation": null,
+      "disposition": null,
+      "property_condition": "Excelente",
+      "tags": [],
+      "public_url": "https://www.forjapropiedades.com/propiedades/alquiler-av-candido-carballo-al-200",
+      "branch": {
+        "name": "Forja Rosario"
+      },
+      "geo_lat": "-32.922242",
+      "geo_long": "-60.66434109999999",
+      "created_at": "2026-10-02T17:37:03",
+      "deleted_at": null
+    },
+    {
+      "id": 8638853,
+      "reference_code": "FAP8638853",
+      "publication_title": "Departamento de 2 dormitorios - Joana Manso 400, Puerto Madero",
+      "address": "Departamento de 2 dormitorios - Juana Manso 400, Puerto Madero",
+      "fake_address": "Departamento de 2 dormitorios - Juana Manso 400, Puerto Madero",
+      "real_address": "Departamento de 2 dormitorios - Juana Manso 400, Puerto Madero",
+      "description": "Increíble departamento semi amoblado en Torres Piso 8 sin cochera.\nImpresionante vista al río y a la ciudad en todos los ambientes. Todo aire, luz y sol. Edificio de súper categoría con todos los amenities.\n100 m2 totales en 3 ambientes. Palier privado, hall de recepción, living comedor con salida a balcón . Cocina comedor con barra integradora al living comedor, equipada con horno y cocina empotrados, microondas y heladera. Lavadero , gran alacena de guardado, lavarropas y salida a palier de servicio. 2 dormitorios en suite, a los que se accede a través de un pasillo de distribución. Dormitorio principal en suite con increíble vestidor, segundo dormitorio en suite con amplios placares .\nPisos de porcelanato símil madera. Aire acondicionado split frío calor en los ambientes.\nAmenities:, Juegos para niños, parque, Piscina climatizada , Salón de fiestas, Salón para niños, gimnasio, Seguridad 24 Hrs, Solarium, SUM, Vestuarios y baños para personal de servicio.\nDirección: Joana Manso 494\nContrato por 1 año\nREQUISITOS DE INGRESO: Ingresos demostrables. * Garantía propietaria de CABA o seguro de caución, un mes de alquiler adelantado. un mes de Depósito en garantía.\nArnaldo Garcia - Mat. 5979",
+      "type": {
+        "id": 2,
+        "code": "AP",
+        "name": "Departamento"
+      },
+      "operations": [
+        {
+          "operation_type": "Alquiler temporario",
+          "prices": [
+            {
+              "currency": "USD",
+              "price": 2000,
+              "period": 0
+            }
+          ]
+        }
+      ],
+      "location": {
+        "name": "Puerto Madero",
+        "full_location": "Argentina | Capital Federal | Puerto Madero ",
+        "short_location": "Capital Federal | Puerto Madero"
+      },
+      "status": 2,
+      "room_amount": 3,
+      "suite_amount": 2,
+      "bathroom_amount": 2,
+      "parking_lot_amount": 0,
+      "age": 0,
+      "surface": "100",
+      "total_surface": "100",
+      "roofed_surface": "88",
+      "semiroofed_surface": "0",
+      "unroofed_surface": "0",
+      "expenses": 0,
+      "orientation": null,
+      "disposition": "Frente",
+      "property_condition": null,
+      "tags": [
+        {
+          "id": 1,
+          "name": "Agua Corriente",
+          "type": 1
+        },
+        {
+          "id": 2,
+          "name": "Gas Natural",
+          "type": 1
+        },
+        {
+          "id": 3,
+          "name": "Internet",
+          "type": 1
+        },
+        {
+          "id": 4,
+          "name": "Electricidad",
+          "type": 1
+        },
+        {
+          "id": 5,
+          "name": "Balcón",
+          "type": 1
+        },
+        {
+          "id": 6,
+          "name": "Cocina",
+          "type": 1
+        },
+        {
+          "id": 7,
+          "name": "Comedor diario",
+          "type": 1
+        },
+        {
+          "id": 8,
+          "name": "Living comedor",
+          "type": 1
+        },
+        {
+          "id": 9,
+          "name": "Vestidor",
+          "type": 1
+        },
+        {
+          "id": 10,
+          "name": "Gimnasio",
+          "type": 1
+        },
+        {
+          "id": 11,
+          "name": "Solarium",
+          "type": 1
+        },
+        {
+          "id": 12,
+          "name": "SUM",
+          "type": 1
+        },
+        {
+          "id": 13,
+          "name": "Seguridad 24hs",
+          "type": 1
+        },
+        {
+          "id": 14,
+          "name": "Salón para niños",
+          "type": 1
+        }
+      ],
+      "public_url": "https://www.forjapropiedades.com/propiedades/alquiler-departamento-de-2-dormitorios-juana-manso-400-puerto-madero",
+      "branch": {
+        "name": "Forja Buenos Aires"
+      },
+      "geo_lat": "-34.6010376",
+      "geo_long": "-58.3639364",
+      "created_at": "2026-08-12T16:39:48",
+      "deleted_at": null
+    }
+  ]
+}
