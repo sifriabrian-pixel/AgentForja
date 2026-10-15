@@ -23,9 +23,9 @@ function checkEnv() {
   const faltan = ['ANTHROPIC_API_KEY', 'WHATSAPP_VERIFY_TOKEN'].filter((k) => !process.env[k]);
   if (process.env.WHATSAPP_DRY_RUN !== '1') faltan.push(...['WHATSAPP_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'].filter((k) => !process.env[k]));
   if (faltan.length) console.warn(`[config] Faltan variables de entorno: ${faltan.join(', ')}`);
-  if (!process.env.WHATSAPP_APP_SECRET) {
-    if (process.env.WHATSAPP_DRY_RUN === '1') console.warn('[config] WHATSAPP_APP_SECRET no configurado: el webhook no verifica la firma de Meta (modo prueba)');
-    else console.error('[config] WHATSAPP_APP_SECRET no configurado: el webhook rechaza todos los mensajes hasta que se configure');
+  if (!process.env.WHATSAPP_APP_SECRET && !process.env.KAPSO_WEBHOOK_SECRET) {
+    if (process.env.WHATSAPP_DRY_RUN === '1') console.warn('[config] Sin WHATSAPP_APP_SECRET ni KAPSO_WEBHOOK_SECRET: el webhook no verifica firmas (modo prueba)');
+    else console.error('[config] Sin WHATSAPP_APP_SECRET ni KAPSO_WEBHOOK_SECRET: el webhook rechaza todos los mensajes hasta que se configure uno');
   }
   if (!config.HANDOFF_WHATSAPP) console.error('[config] HANDOFF_WHATSAPP no configurado: las derivaciones quedan guardadas pero no se le avisa a nadie');
   if (!process.env.TOKKO_API_KEY) console.warn('[config] TOKKO_API_KEY no configurado: el catálogo sale de las fichas de ejemplo (fixtures), NO del Tokko real');
@@ -46,7 +46,7 @@ function startServer() {
 
     if (url.pathname === '/webhook' && req.method === 'POST') {
       const raw = await readBody(req);
-      if (!whatsapp.verifySignature(raw, req.headers['x-hub-signature-256'])) {
+      if (!whatsapp.verifySignature(raw, req.headers)) {
         console.error('[webhook] Firma inválida — rechazado');
         res.writeHead(403);
         res.end();
@@ -98,6 +98,7 @@ function cada(ms, nombre, tarea) {
 
 if (require.main === module) {
   console.log(`[server] Node ${process.version} · better-sqlite3 ${require('better-sqlite3/package.json').version}`);
+  console.log(`[server] WhatsApp vía ${process.env.WHATSAPP_API_BASE ? new URL(process.env.WHATSAPP_API_BASE).host : 'graph.facebook.com'}`);
   checkEnv();
   const ruta = db.defaultPath();
   db.open(ruta);

@@ -74,6 +74,20 @@ npm test      # 70 tests, sin red (Claude falso, WhatsApp capturado)
 npm run qa    # los 23 casos de QA contra el Claude real (necesita ANTHROPIC_API_KEY)
 ```
 
+## Meta directo o Kapso
+
+El agente habla con WhatsApp directo contra Meta o a través de Kapso, sin cambiar código:
+
+| | Meta directo | Kapso |
+|---|---|---|
+| `WHATSAPP_API_BASE` | vacío | `https://api.kapso.ai/meta/whatsapp/v24.0` |
+| `WHATSAPP_TOKEN` | token de la app de Meta | API key del proyecto de Kapso |
+| `WHATSAPP_PHONE_NUMBER_ID` | el de Meta | el del número en Kapso |
+| Firma del webhook | `WHATSAPP_APP_SECRET` | `KAPSO_WEBHOOK_SECRET` (el `secret_key` del webhook) |
+| Webhook | URL + `WHATSAPP_VERIFY_TOKEN` en la app de Meta | webhook tipo **meta** del número apuntando a `/webhook` |
+
+Con Kapso el webhook tiene que ser tipo **meta**: Kapso reenvía el mismo formato de Meta y el agente lo lee igual. El sandbox de Kapso no envía plantillas, así que ahí el aviso a Alejandro solo sale con la ventana de 24 hs abierta.
+
 ## Railway
 
 - Una sola instancia, **sin réplicas** (SQLite + bloqueo por número en proceso). No sirve en serverless.

@@ -1,7 +1,12 @@
 // WhatsApp Cloud API (igual que Impacta) + modo prueba sin envíos reales.
+//
+// Sirve directo contra Meta o a través de Kapso: la API de Kapso acepta los
+// mismos pedidos y el mismo "Authorization: Bearer". Para Kapso:
+//   WHATSAPP_API_BASE=https://api.kapso.ai/meta/whatsapp/v24.0
+//   WHATSAPP_TOKEN=<API key del proyecto de Kapso>
 const crypto = require('crypto');
 
-const GRAPH_VERSION = 'v21.0';
+const apiBase = () => (process.env.WHATSAPP_API_BASE || 'https://graph.facebook.com/v21.0').replace(/\/+$/, '');
 
 // WHATSAPP_DRY_RUN=1 → no llama a Meta; loguea y devuelve un id falso.
 const dryRun = () => process.env.WHATSAPP_DRY_RUN === '1';
@@ -23,7 +28,7 @@ async function post(body) {
     console.log(`[wa:dry] → ${body.to} (${body.type}) ${body.text?.body || body.template?.name || ''}`);
     return { messages: [{ id }] };
   }
-  const url = `https://graph.facebook.com/${GRAPH_VERSION}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  const url = `${apiBase()}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
@@ -67,16 +72,32 @@ async function sendMedia(to, tipo, mediaId, caption) {
   return post({ to, type: key, [key]: media });
 }
 
-// Verifica la firma HMAC del webhook con el App Secret. Sin App Secret no se
-// puede verificar nada: solo se acepta en modo prueba (WHATSAPP_DRY_RUN=1).
-function verifySignature(rawBody, signatureHeader) {
-  const appSecret = process.env.WHATSAPP_APP_SECRET;
-  if (!appSecret) return dryRun();
-  if (!signatureHeader) return false;
-  const expected = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
-  const a = Buffer.from(expected);
-  const b = Buffer.from(signatureHeader);
+function igualSeguro(esperado, recibido) {
+  const a = Buffer.from(esperado);
+  const b = Buffer.from(String(recibido));
   return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// Verifica que el webhook venga de quien dice venir. Dos formatos:
+//   Meta:  X-Hub-Signature-256 = "sha256=" + HMAC hex, con WHATSAPP_APP_SECRET
+//   Kapso: X-Webhook-Signature = HMAC hex sin prefijo, con KAPSO_WEBHOOK_SECRET
+//          (el secret_key del webhook tipo "meta" configurado en Kapso)
+// Sin ningún secreto configurado no se puede verificar nada: solo se acepta en
+// modo prueba (WHATSAPP_DRY_RUN=1).
+function verifySignature(rawBody, headers = {}) {
+  const kapsoSecret = process.env.KAPSO_WEBHOOK_SECRET;
+  const metaSecret = process.env.WHATSAPP_APP_SECRET;
+  if (!kapsoSecret && !metaSecret) return dryRun();
+
+  const firmaKapso = headers['x-webhook-signature'];
+  if (firmaKapso && kapsoSecret) {
+    return igualSeguro(crypto.createHmac('sha256', kapsoSecret).update(rawBody).digest('hex'), String(firmaKapso).toLowerCase());
+  }
+  const firmaMeta = headers['x-hub-signature-256'];
+  if (firmaMeta && metaSecret) {
+    return igualSeguro(`sha256=${crypto.createHmac('sha256', metaSecret).update(rawBody).digest('hex')}`, firmaMeta);
+  }
+  return false;
 }
 
 module.exports = { sendMessage, sendTemplate, sendMedia, verifySignature, normalizeTo };
