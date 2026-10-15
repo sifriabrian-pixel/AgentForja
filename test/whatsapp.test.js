@@ -46,7 +46,7 @@ test('los mensajes salen por Meta o por Kapso según WHATSAPP_API_BASE, con el m
   process.env.WHATSAPP_PHONE_NUMBER_ID = '597907523413541';
   const pedidos = [];
   global.fetch = async (url, opts) => {
-    pedidos.push({ url, auth: opts.headers.Authorization, body: JSON.parse(opts.body) });
+    pedidos.push({ url, auth: opts.headers.Authorization, apiKey: opts.headers['X-API-Key'], body: JSON.parse(opts.body) });
     return { ok: true, json: async () => ({ messages: [{ id: 'wamid.x' }] }) };
   };
 
@@ -56,7 +56,9 @@ test('los mensajes salen por Meta o por Kapso según WHATSAPP_API_BASE, con el m
 
   assert.equal(pedidos[0].url, 'https://graph.facebook.com/v21.0/597907523413541/messages');
   assert.equal(pedidos[1].url, 'https://api.kapso.ai/meta/whatsapp/v24.0/597907523413541/messages');
-  assert.equal(pedidos[1].auth, 'Bearer token-de-prueba');
+  assert.equal(pedidos[0].auth, 'Bearer token-de-prueba', 'Meta: Bearer');
+  assert.equal(pedidos[1].apiKey, 'token-de-prueba', 'Kapso: la API key va en X-API-Key');
+  assert.equal(pedidos[1].auth, undefined, 'Kapso: sin Bearer (lo rechaza con 401)');
   const { to: _a, ...cuerpoMeta } = pedidos[0].body;
   const { to: _b, ...cuerpoKapso } = pedidos[1].body;
   assert.deepEqual(cuerpoKapso, cuerpoMeta, 'mismo pedido; solo cambia cómo va el número (ver el test siguiente)');

@@ -81,7 +81,7 @@ El agente habla con WhatsApp directo contra Meta o a través de Kapso, sin cambi
 | | Meta directo | Kapso |
 |---|---|---|
 | `WHATSAPP_API_BASE` | vacío | `https://api.kapso.ai/meta/whatsapp/v24.0` |
-| `WHATSAPP_TOKEN` | token de la app de Meta | API key del proyecto de Kapso |
+| `WHATSAPP_TOKEN` | token de la app de Meta (va como Bearer) | API key del proyecto de Kapso que tiene el número (va en `X-API-Key`) |
 | `WHATSAPP_PHONE_NUMBER_ID` | el de Meta | el del número en Kapso |
 | Firma del webhook | `WHATSAPP_APP_SECRET` | `KAPSO_WEBHOOK_SECRET` (el `secret_key` del webhook) |
 | Webhook | URL + `WHATSAPP_VERIFY_TOKEN` en la app de Meta | webhook tipo **meta** del número apuntando a `/webhook` |

@@ -1,12 +1,21 @@
 // WhatsApp Cloud API (igual que Impacta) + modo prueba sin envíos reales.
 //
 // Sirve directo contra Meta o a través de Kapso: la API de Kapso acepta los
-// mismos pedidos y el mismo "Authorization: Bearer". Para Kapso:
+// mismos pedidos. Para Kapso:
 //   WHATSAPP_API_BASE=https://api.kapso.ai/meta/whatsapp/v24.0
-//   WHATSAPP_TOKEN=<API key del proyecto de Kapso>
+//   WHATSAPP_TOKEN=<API key del proyecto de Kapso que tiene el número>
 const crypto = require('crypto');
 
 const apiBase = () => (process.env.WHATSAPP_API_BASE || 'https://graph.facebook.com/v21.0').replace(/\/+$/, '');
+const esKapso = () => /(^|\.)kapso\.ai$/.test(new URL(apiBase()).hostname);
+
+// Meta usa "Authorization: Bearer <token>". Kapso pide la API key del proyecto
+// en "X-API-Key" y rechaza (401) un Bearer con esa key.
+function encabezados() {
+  const token = process.env.WHATSAPP_TOKEN;
+  const auth = esKapso() ? { 'X-API-Key': token } : { Authorization: `Bearer ${token}` };
+  return { ...auth, 'Content-Type': 'application/json' };
+}
 
 // WHATSAPP_DRY_RUN=1 → no llama a Meta; loguea y devuelve un id falso.
 const dryRun = () => process.env.WHATSAPP_DRY_RUN === '1';
@@ -33,7 +42,7 @@ async function post(body) {
   const url = `${apiBase()}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
   const res = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'Content-Type': 'application/json' },
+    headers: encabezados(),
     body: JSON.stringify({ messaging_product: 'whatsapp', ...body }),
   });
   if (!res.ok) throw new Error(`WhatsApp API ${res.status}: ${await res.text()}`);
