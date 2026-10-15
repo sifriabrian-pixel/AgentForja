@@ -22,7 +22,9 @@ function normalizeTo(to) {
 }
 
 async function post(body) {
-  body = { ...body, to: normalizeTo(body.to) };
+  // El ajuste del 9 argentino es por la lista de destinatarios del número de
+  // prueba de Meta. Kapso (y su sandbox) esperan el número tal cual llegó.
+  if (!process.env.WHATSAPP_API_BASE) body = { ...body, to: normalizeTo(body.to) };
   if (dryRun()) {
     const id = `wamid.dry.${crypto.randomUUID()}`;
     console.log(`[wa:dry] → ${body.to} (${body.type}) ${body.text?.body || body.template?.name || ''}`);

@@ -57,5 +57,19 @@ test('los mensajes salen por Meta o por Kapso según WHATSAPP_API_BASE, con el m
   assert.equal(pedidos[0].url, 'https://graph.facebook.com/v21.0/597907523413541/messages');
   assert.equal(pedidos[1].url, 'https://api.kapso.ai/meta/whatsapp/v24.0/597907523413541/messages');
   assert.equal(pedidos[1].auth, 'Bearer token-de-prueba');
-  assert.deepEqual(pedidos[1].body, pedidos[0].body);
+  const { to: _a, ...cuerpoMeta } = pedidos[0].body;
+  const { to: _b, ...cuerpoKapso } = pedidos[1].body;
+  assert.deepEqual(cuerpoKapso, cuerpoMeta, 'mismo pedido; solo cambia cómo va el número (ver el test siguiente)');
+});
+
+test('con Kapso el número se envía tal cual llegó (sin quitar el 9)', async () => {
+  process.env.WHATSAPP_DRY_RUN = '';
+  process.env.WHATSAPP_API_BASE = 'https://api.kapso.ai/meta/whatsapp/v24.0';
+  process.env.WHATSAPP_PHONE_NUMBER_ID = '597907523413541';
+  const tos = [];
+  global.fetch = async (_url, opts) => { tos.push(JSON.parse(opts.body).to); return { ok: true, json: async () => ({ messages: [{ id: 'w' }] }) }; };
+  await whatsapp.sendMessage('5493415551234', 'hola');
+  delete process.env.WHATSAPP_API_BASE;
+  await whatsapp.sendMessage('5493415551234', 'hola');
+  assert.deepEqual(tos, ['5493415551234', '543415551234']);
 });

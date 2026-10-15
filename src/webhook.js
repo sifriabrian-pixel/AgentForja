@@ -35,7 +35,30 @@ function handleEchoes(value) {
 }
 
 // Devuelve la lista de wa_id con mensajes nuevos (para tests).
+// Webhook de Kapso con su formato propio (el único que admite el sandbox de
+// Kapso): { message, conversation, phone_number_id }, o un lote
+// { batch: true, data: [...] }. Se traduce al sobre de Meta para que el resto
+// del agente no cambie. Solo interesan los mensajes entrantes.
+function kapsoAMeta(payload) {
+  const eventos = payload.batch ? payload.data || [] : [payload];
+  const mensajes = [];
+  const contactos = [];
+  for (const ev of eventos) {
+    const m = ev?.message;
+    if (!m || m.kapso?.direction !== 'inbound') continue;
+    const from = m.from || ev.conversation?.phone_number;
+    if (!from) continue;
+    const { kapso, ...meta } = m;
+    mensajes.push({ ...meta, from: String(from).replace(/\D/g, '') });
+    contactos.push({ wa_id: String(from).replace(/\D/g, ''), profile: { name: ev.conversation?.contact_name || null } });
+  }
+  return { object: 'whatsapp_business_account', entry: [{ changes: [{ field: 'messages', value: { contacts: contactos, messages: mensajes } }] }] };
+}
+
+const esFormatoKapso = (p) => !p?.entry && (p?.message || p?.batch);
+
 function handlePayload(payload) {
+  if (esFormatoKapso(payload)) payload = kapsoAMeta(payload);
   const numeros = new Set();
   for (const entry of payload.entry || []) {
     for (const change of entry.changes || []) {
@@ -97,4 +120,4 @@ function handlePayload(payload) {
   return [...numeros];
 }
 
-module.exports = { handlePayload };
+module.exports = { handlePayload, kapsoAMeta };

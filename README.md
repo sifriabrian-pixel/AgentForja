@@ -86,7 +86,7 @@ El agente habla con WhatsApp directo contra Meta o a través de Kapso, sin cambi
 | Firma del webhook | `WHATSAPP_APP_SECRET` | `KAPSO_WEBHOOK_SECRET` (el `secret_key` del webhook) |
 | Webhook | URL + `WHATSAPP_VERIFY_TOKEN` en la app de Meta | webhook tipo **meta** del número apuntando a `/webhook` |
 
-Con Kapso el webhook tiene que ser tipo **meta**: Kapso reenvía el mismo formato de Meta y el agente lo lee igual. El sandbox de Kapso no envía plantillas, así que ahí el aviso a Alejandro solo sale con la ventana de 24 hs abierta.
+El webhook de Kapso puede ser tipo **meta** (reenvía el formato de Meta) o tipo **kapso** con el evento `whatsapp.message.received` (el único que admite el sandbox de Kapso): el agente acepta los dos y traduce el de Kapso al de Meta. Con Kapso el número se envía tal cual llegó (sin quitar el 9 argentino). El sandbox no envía plantillas, así que ahí el aviso a Alejandro solo sale con la ventana de 24 hs abierta.
 
 ## Railway
 

@@ -337,3 +337,46 @@ test('en producción la base no arranca sin DB_PATH ni con una ruta dentro del c
   process.env.DB_PATH = path.join(path.parse(__dirname).root, 'data', 'forja.sqlite');
   assert.equal(db.defaultPath(), process.env.DB_PATH);
 });
+
+// ─── Formato propio de Kapso (sandbox) ───────────────────────────────────────
+
+const kapsoRecibido = (from, body, { id = `wamid.k.${Math.random()}`, name = 'Lead Kapso' } = {}) => ({
+  message: { id, timestamp: '1730092800', type: 'text', from, text: { body }, kapso: { direction: 'inbound', status: 'received', origin: 'cloud_api', has_media: false, content: body } },
+  conversation: { id: 'conv_1', contact_name: name, phone_number: from, phone_number_id: '597907523413541' },
+  is_new_conversation: true,
+  phone_number_id: '597907523413541',
+});
+
+test('Kapso: un mensaje recibido en formato Kapso se atiende igual que uno de Meta', async () => {
+  const sent = captureSends();
+  abrirVentana();
+  const calls = fakeClaude(VISITA);
+  webhook.handlePayload(kapsoRecibido(WA, 'quiero visitar el de Ayacucho', { id: 'wamid.kapso.1' }));
+  await agent.idle();
+  assert.equal(calls.length, 2);
+  assert.match(aAlejandro(sent)[0].text, /^\(VISITA VENTA\)/);
+  assert.deepEqual(sent.filter((s) => s.to === WA).map((s) => s.text), [config.MSG_VISITA_DERIVADA]);
+  assert.equal(repo.getCurrentLead(WA).nombre_perfil, 'Lead Kapso');
+
+  // Reenvío del mismo mensaje: no se responde dos veces.
+  webhook.handlePayload(kapsoRecibido(WA, 'quiero visitar el de Ayacucho', { id: 'wamid.kapso.1' }));
+  await agent.idle();
+  assert.equal(calls.length, 2);
+});
+
+test('Kapso: lotes, mensajes salientes y comandos de Alejandro', async () => {
+  const sent = captureSends();
+  const calls = fakeClaude(toolThenText(null, null, 'hola'));
+  // Un lote con un entrante y un saliente: solo cuenta el entrante.
+  const saliente = { message: { id: 'wamid.out', type: 'text', to: WA, text: { body: 'hola' }, kapso: { direction: 'outbound' } }, phone_number_id: '597907523413541' };
+  webhook.handlePayload({ type: 'whatsapp.message.received', batch: true, data: [kapsoRecibido(WA, 'hola'), saliente], batch_info: { size: 2 } });
+  await agent.idle();
+  assert.equal(calls.length, 1);
+  assert.equal(sent.filter((s) => s.to === WA).length, 1);
+
+  // Alejandro escribe por Kapso: abre su ventana y el comando funciona.
+  webhook.handlePayload(kapsoRecibido(HANDOFF, `#pausa ${WA}`));
+  await agent.idle();
+  assert.equal(repo.isPaused(repo.getCurrentLead(WA)), true);
+  assert.equal(handoff.ventanaAbierta(), true);
+});
