@@ -74,10 +74,10 @@ async function applyDerivarVisita(waId, input, store = repo) {
 
   const nombre = nombreDe(lead, input.nombre);
   store.mergeDatos(lead.id, { nombre: input.nombre, propiedad_id: propiedad.id });
-  const texto = briefs.briefVisita({ propiedad, disponibilidad: input.disponibilidad }, { waId, nombre });
+  const texto = briefs.briefVisita({ propiedad, disponibilidad: input.disponibilidad, destino: input.destino, plazo: input.plazo }, { waId, nombre });
   const { creada } = store.createDerivacion({
     leadId: lead.id, tipo: 'visita', clave: `visita:${propiedad.id}`, destino: config.HANDOFF_WHATSAPP, texto,
-    datos: { propiedad_id: propiedad.id, disponibilidad: input.disponibilidad || null },
+    datos: { propiedad_id: propiedad.id, disponibilidad: input.disponibilidad || null, destino: input.destino || null, plazo: input.plazo || null },
   });
   if (!creada) return 'Ese pedido de visita ya estaba derivado (no se volvió a enviar). Decile que su pedido ya está en manos del asesor y que lo va a contactar.';
   store.cancelFollowup(lead.id, 'derivado');
@@ -354,11 +354,14 @@ function registerEcho(input, { store = repo } = {}) {
   return clock.run(input.now, () => {
     const waId = input.conversationId;
     const lead = store.captureInbound(waId, null, null);
-    const nuevo = store.insertEcho({ waId, leadId: lead.id, waMessageId: input.messageId || `echo.${crypto.randomUUID()}`, body: input.text || '[mensaje sin texto]' });
+    // El echo y el inicio de la pausa llevan la misma hora: así el echo cuenta
+    // como "una persona ya le respondió" y no se le avisa de más a Alejandro.
+    const ts = clock.nowISO();
+    const nuevo = store.insertEcho({ waId, leadId: lead.id, waMessageId: input.messageId || `echo.${crypto.randomUUID()}`, body: input.text || '[mensaje sin texto]', createdAt: ts });
     if (!nuevo) return { pausado: false, lead };
-    const hasta = new Date(clock.date().getTime() + config.HUMAN_TAKEOVER_HOURS * HORA).toISOString();
+    const hasta = new Date(new Date(ts).getTime() + config.HUMAN_TAKEOVER_HOURS * HORA).toISOString();
     // Una pausa manual sin vencimiento (#pausa) no se acorta por un echo.
-    if (!lead.paused_until || lead.paused_until < hasta) store.pause(lead.id, hasta, 'echo');
+    if (!lead.paused_until || lead.paused_until < hasta) store.pause(lead.id, hasta, 'echo', ts);
     return { pausado: true, lead: store.getLead(lead.id) };
   });
 }

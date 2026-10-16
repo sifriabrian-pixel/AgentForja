@@ -37,6 +37,8 @@ const TOOLS_BASE = [{
     properties: {
       propiedad_id: { type: 'string', description: 'id de la unidad, tal como lo devolvió get_property' },
       disponibilidad: { type: 'string', description: 'Días y horarios que dijo el lead. Omitir si no los dio.' },
+      destino: { type: 'string', description: 'Para qué la busca, si lo dijo: vivir o inversión' },
+      plazo: { type: 'string', description: 'En qué plazo piensa comprar, tal como lo dijo ("lo antes posible", "3 meses"). Omitir si no lo dijo.' },
       nombre: NOMBRE,
     },
     required: ['propiedad_id'],

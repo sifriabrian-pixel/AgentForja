@@ -386,4 +386,27 @@ module.exports = [
       ];
     },
   },
+  {
+    id: 24,
+    nombre: 'Consulta por una unidad en venta: presenta, pregunta destino, plazo y recién después ofrece visita',
+    pasos: [
+      { lead: `Me interesa esta propiedad, ${LINK.ayacucho}` },
+      { lead: 'Soy Martina' },
+      { lead: 'Para vivir' },
+      { lead: 'En unos 3 meses' },
+      { lead: 'Sí, coordinemos una visita' },
+      { lead: 'El jueves a la tarde' },
+    ],
+    checks: (x) => {
+      const brief = x.briefs('visita')[0] || '';
+      return [
+        c(/^buen[oa]s (d[ií]as|tardes|noches)/i.test(x.respuestas[0]) && /nombre/i.test(x.respuestas[0]), 'el primer mensaje saluda según la hora y pide el nombre'),
+        c(!/d[ií]as y horarios|visita/i.test(x.respuestas[0]), 'no ofrece visita en el primer mensaje'),
+        c(/vivir|inversi[oó]n/i.test(x.respuestas[1]), 'pregunta si es para vivir o inversión'),
+        c(/plazo|cu[aá]ndo|3 meses|6/i.test(x.respuestas[2]), 'pregunta en qué plazo piensa comprar'),
+        c(/visita/i.test(x.respuestas[3]), 'después ofrece dudas o coordinar una visita'),
+        c(/Destino: vivienda/.test(brief) && /Plazo: [^-]*3 meses/.test(brief), 'el brief de visita lleva destino y plazo'),
+      ];
+    },
+  },
 ];

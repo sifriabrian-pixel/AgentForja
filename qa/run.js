@@ -1,4 +1,4 @@
-// Corre los 23 casos de QA (qa/casos.js) contra el Claude real, usando el adapter
+// Corre los 24 casos de QA (qa/casos.js) contra el Claude real, usando el adapter
 // de test: base en memoria, catálogo de fixtures, nada sale por WhatsApp.
 //
 //   npm run qa              todos los casos

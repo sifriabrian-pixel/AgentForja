@@ -104,9 +104,11 @@ const SIN_VENCIMIENTO = '9999-12-31T00:00:00.000Z';
 
 // hasta = null → pausa sin vencimiento (hasta #reanudar).
 // paused_at marca el inicio de la pausa: extender una pausa en curso (otro echo) no lo mueve.
-function pause(id, hasta, motivo) {
+// desde: inicio de la pausa (por defecto, ahora). Una pausa por echo empieza
+// en el instante del echo, para que ese mensaje cuente como respuesta humana.
+function pause(id, hasta, motivo, desde = now()) {
   const yaPausado = isPaused(getLead(id));
-  updateLead(id, { paused_until: hasta || SIN_VENCIMIENTO, pause_reason: motivo, ...(yaPausado ? {} : { paused_at: now() }) });
+  updateLead(id, { paused_until: hasta || SIN_VENCIMIENTO, pause_reason: motivo, ...(yaPausado ? {} : { paused_at: desde }) });
   addEvent(id, 'paused', { hasta: hasta || null, motivo });
 }
 
@@ -241,12 +243,12 @@ function insertOutbound({ waId, leadId, type = 'text', body, status = 'enviando'
 
 // Mensaje que una persona escribió desde el número de Forja (echo de coexistencia).
 // Devuelve false si ya lo teníamos: es un reenvío de Meta o un mensaje que mandó el propio agente.
-function insertEcho({ waId, leadId, waMessageId, body }) {
+function insertEcho({ waId, leadId, waMessageId, body, createdAt = now() }) {
   const res = db.get().prepare(`
     INSERT INTO messages (id, wa_id, lead_id, direction, wa_message_id, type, body, status, created_at)
     VALUES (?, ?, ?, 'out', ?, 'echo', ?, 'enviado', ?)
     ON CONFLICT (wa_message_id) DO NOTHING
-  `).run(uuid(), waId, leadId, waMessageId, body, now());
+  `).run(uuid(), waId, leadId, waMessageId, body, createdAt);
   return res.changes === 1;
 }
 

@@ -328,3 +328,11 @@ test('mensajes que entran mientras Claude responde: se contesta todo junto y la 
   assert.equal(out.actions.length, 1, 'el aviso creado en la primera vuelta sale igual');
   assert.equal(repo.pendingInbound(WA).length, 0);
 });
+
+test('el prompt pide presentar la unidad con diferenciales y seguir con destino, plazo y recién después la visita', () => {
+  const prompt = require('../prompts/forja').buildSystemPrompt();
+  assert.match(prompt, /SIEMPRE empieza con el saludo/);
+  assert.match(prompt, /En la primera respuesta NO ofrezcas visita/);
+  const orden = ['¿La buscás para vivir o como inversión?', '¿En qué plazo estás analizando hacer la compra? ¿Lo antes posible, 3 meses, 6?', 'Perfecto ¿Alguna duda o te parece si coordinamos una visita con uno de nuestros vendedores?'].map((t) => prompt.indexOf(t));
+  assert.ok(orden.every((i) => i > 0) && orden[0] < orden[1] && orden[1] < orden[2], 'las tres preguntas están, en ese orden');
+});
