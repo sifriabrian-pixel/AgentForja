@@ -3,6 +3,7 @@ const { test, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const core = require('../src/core');
 const repo = require('../src/repo');
+const clock = require('../src/clock');
 const config = require('../config/forja');
 
 const WA = '5493415557777';
@@ -42,7 +43,7 @@ test('cada respuesta del agente programa el seguimiento a 5 días; si el lead es
   assert.equal(repo.getFollowup(o1.state.leadId).status, 'cancelled', 'el lead escribió: se cancela');
   const o2 = await core.processPending(WA, masDias(T0, 2), { llm });
   assert.deepEqual(o2.state.followup, { status: 'pending', dueAt: masDias(T0, 7), reason: null, enviados: 0 }, 'y se vuelve a programar desde la última respuesta');
-  assert.equal(repo.dueFollowups().length, 0);
+  assert.equal(clock.run(masDias(T0, 2), () => repo.dueFollowups().length), 0, 'a esa hora no hay nada vencido');
 });
 
 test('con dos toques configurados (3 y 7 días) salen dos mensajes y ninguno más', async () => {
