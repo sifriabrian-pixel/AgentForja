@@ -10,6 +10,10 @@ const WA = '5493415551234';
 let n = 0;
 const msg = (text, extra = {}) => ({ conversationId: WA, from: WA, text, now: T0, messageId: `m.${n += 1}`, ...extra });
 
+// Primer mensaje de la conversación: saludo según la hora + el texto esperado.
+const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const conSaludo = (texto) => new RegExp(`^Buen[oa]s (días|tardes|noches) ¿cómo estás\\? Te saluda el asistente de Forja Propiedades\\.\\n\\n${escapar(texto)}$`);
+
 beforeEach(() => freshDb());
 afterEach(() => {
   delete process.env.ENABLE_PROPERTY_SEARCH;
@@ -242,7 +246,7 @@ test('contexto: la ficha de la unidad consultada viaja en cada turno, sin datos 
 test('si Claude deriva pero no escribe nada, el lead recibe igual la frase de derivación', async () => {
   const llm = scriptedLlm(async (h) => { await h.derivar_visita({ propiedad_id: P.aurea }); return ''; });
   const out = await core.handleMessage(msg('quiero verlo'), { llm });
-  assert.deepEqual(out.messages, [config.MSG_VISITA_DERIVADA]);
+  assert.match(out.messages[0], conSaludo(config.MSG_VISITA_DERIVADA), 'primer mensaje: saludo + frase de derivación');
 });
 
 test('echo: cuando una persona escribe desde el número de Forja, el agente se pausa 24 hs en ese chat', async () => {
@@ -324,7 +328,7 @@ test('mensajes que entran mientras Claude responde: se contesta todo junto y la 
     },
   };
   const out = await core.handleMessage(msg('quiero visitar el de Ayacucho'), { llm });
-  assert.deepEqual(out.messages, ['respuesta 2']);
+  assert.match(out.messages[0], conSaludo('respuesta 2'));
   assert.equal(out.actions.length, 1, 'el aviso creado en la primera vuelta sale igual');
   assert.equal(repo.pendingInbound(WA).length, 0);
 });
@@ -335,4 +339,40 @@ test('el prompt pide presentar la unidad con diferenciales y seguir con destino,
   assert.match(prompt, /En la primera respuesta NO ofrezcas visita/);
   const orden = ['¿La buscás para vivir o como inversión?', '¿En qué plazo estás analizando hacer la compra? ¿Lo antes posible, 3 meses, 6?', 'Perfecto ¿Alguna duda o te parece si coordinamos una visita con uno de nuestros vendedores?'].map((t) => prompt.indexOf(t));
   assert.ok(orden.every((i) => i > 0) && orden[0] < orden[1] && orden[1] < orden[2], 'las tres preguntas están, en ese orden');
+});
+
+test('primer mensaje sin saludo: el código agrega el saludo y pide el nombre en vez de otra pregunta', async () => {
+  const llm = scriptedLlm(
+    'Es un piso de 3 dormitorios en Ayacucho.\n\n¿La buscás para vivir o como inversión?',
+    '¿En qué plazo estás analizando hacer la compra?',
+  );
+  const o1 = await core.handleMessage(msg('me interesa el de Ayacucho', { now: '2026-10-20T14:39:00.000Z' }), { llm }); // 11:39 en Argentina
+  assert.equal(o1.messages[0], 'Buenos días ¿cómo estás? Te saluda el asistente de Forja Propiedades.\n\nEs un piso de 3 dormitorios en Ayacucho.\n\n¿Me dirías tu nombre?');
+  const o2 = await core.handleMessage(msg('Martina'), { llm });
+  assert.equal(o2.messages[0], '¿En qué plazo estás analizando hacer la compra?', 'desde el segundo mensaje no se toca');
+});
+
+test('primer mensaje que ya saluda y pide el nombre: no se modifica', async () => {
+  const texto = 'Buenas tardes ¿cómo estás? Te saluda el asistente de Forja Propiedades ¿me dirías tu nombre?';
+  const out = await core.handleMessage(msg('hola'), { llm: scriptedLlm(texto) });
+  assert.equal(out.messages[0], texto);
+});
+
+test('get_property trae la ficha lista para WhatsApp, armada con datos de Tokko', async () => {
+  let ficha;
+  const llm = scriptedLlm(async (h) => { ficha = JSON.parse(await h.get_property({ referencia: P.aurea })); return 'ok'; });
+  await core.handleMessage(msg('info de Aurea'), { llm });
+  assert.equal(ficha.ficha_whatsapp, [
+    '🏠 *Aurea Fisherton - 2 Dormitorios Premium - Schweitzer 8700*',
+    '📍 Fisherton, Rosario',
+    '💰 Alquiler · ARS 1.200.000 por mes',
+    '🛏️ 2 dormitorios · 2 baños · 1 cochera',
+    '📐 99 m² totales · 90 m² cubiertos',
+    '🧾 Expensas: ARS 295.000',
+    '🏗️ A estrenar',
+    '🔗 https://www.forjapropiedades.com/propiedades/alquiler-aurea-fisherton-2-dormitorios-premium-schweitzer-8700',
+  ].join('\n'));
+  const prompt = require('../prompts/forja').buildSystemPrompt();
+  assert.match(prompt, /"ficha_whatsapp"/);
+  assert.match(prompt, /UNA línea que empiece con "✨"/);
 });

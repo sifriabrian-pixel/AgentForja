@@ -23,6 +23,10 @@ async function entra(from, msg, opts) {
   await agent.idle();
 }
 
+// Primer mensaje de la conversación: saludo según la hora + el texto esperado.
+const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const conSaludo = (texto) => new RegExp(`^Buen[oa]s (días|tardes|noches) ¿cómo estás\\? Te saluda el asistente de Forja Propiedades\\.\\n\\n${escapar(texto)}$`);
+
 beforeEach(() => freshDb());
 afterEach(() => {
   delete process.env.HANDOFF_TEMPLATE_NAME;
@@ -40,7 +44,8 @@ test('mensaje entrante: responde al lead y le manda el brief a Alejandro', async
   assert.equal(sent.length, 2);
   assert.equal(sent[0].to, HANDOFF);
   assert.match(sent[0].text, /^\(VISITA VENTA\) Piso exclusivo de 3 dormitorios - Ayacucho 1300 - .* - Disponibilidad: sábado a la mañana - Ana - \+5493415558888$/);
-  assert.deepEqual(sent[1], { to: WA, text: config.MSG_VISITA_DERIVADA });
+  assert.equal(sent[1].to, WA);
+  assert.match(sent[1].text, conSaludo(config.MSG_VISITA_DERIVADA));
   assert.equal(repo.derivacionesDe(repo.getCurrentLead(WA).id)[0].status, 'enviado');
 });
 
@@ -92,8 +97,8 @@ test('búsqueda: a Alejandro le llegan dos mensajes, el brief limpio y aparte el
   assert.deepEqual(sent, [
     { to: HANDOFF, text: '(BÚSQUEDA VENTA) casa, 3 dormitorios - Requisitos: sin excluyentes - Zona: Funes - Presupuesto: a confirmar - Marcos - +5493415558888' },
     { to: HANDOFF, text: 'Origen: directo' },
-    { to: WA, text: 'Perfecto, vamos a derivar la búsqueda al asesor de ventas para que te contacte y evalúen opciones' },
-  ]);
+  ].concat(sent.slice(2)));
+  assert.match(sent[2].text, conSaludo('Perfecto, vamos a derivar la búsqueda al asesor de ventas para que te contacte y evalúen opciones'));
 });
 
 test('si la nota falla, el brief no se repite', async () => {
@@ -355,7 +360,9 @@ test('Kapso: un mensaje recibido en formato Kapso se atiende igual que uno de Me
   await agent.idle();
   assert.equal(calls.length, 2);
   assert.match(aAlejandro(sent)[0].text, /^\(VISITA VENTA\)/);
-  assert.deepEqual(sent.filter((s) => s.to === WA).map((s) => s.text), [config.MSG_VISITA_DERIVADA]);
+  const alLead = sent.filter((s) => s.to === WA).map((s) => s.text);
+  assert.equal(alLead.length, 1);
+  assert.match(alLead[0], conSaludo(config.MSG_VISITA_DERIVADA));
   assert.equal(repo.getCurrentLead(WA).nombre_perfil, 'Lead Kapso');
 
   // Reenvío del mismo mensaje: no se responde dos veces.

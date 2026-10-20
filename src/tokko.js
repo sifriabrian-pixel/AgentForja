@@ -309,8 +309,42 @@ function fichaParaAgente(p) {
   return ficha;
 }
 
+// Ficha lista para WhatsApp, armada en código con los datos de Tokko (nada
+// inventado). El agente le suma una línea "✨" con uno o dos diferenciales.
+function fichaWhatsApp(p) {
+  const partes = String(p.ubicacion || '').split('|').map((s) => s.trim()).filter(Boolean);
+  // full_location: "Argentina | Santa Fe | Rosario | Fisherton". Si la ciudad
+  // coincide con el barrio, se muestra la provincia ("Capital Federal" = Buenos Aires).
+  const nombre = (s) => (s === 'Capital Federal' ? 'Buenos Aires' : s);
+  const ciudad = [partes[2], partes[1]].map(nombre).find((s) => s && slugify(s) !== slugify(p.zona)) || null;
+  const lugar = [p.zona, ciudad].filter(Boolean).join(', ');
+  const clase = claseOperacion(p.operacion);
+  const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+  const ambientes = [
+    p.dormitorios ? plural(p.dormitorios, 'dormitorio', 'dormitorios') : p.ambientes ? plural(p.ambientes, 'ambiente', 'ambientes') : null,
+    p.banos ? plural(p.banos, 'baño', 'baños') : null,
+    p.cocheras ? plural(p.cocheras, 'cochera', 'cocheras') : null,
+  ].filter(Boolean).join(' · ');
+  const superficie = [
+    p.sup_total ? `${miles(p.sup_total)} m² totales` : null,
+    p.sup_cubierta && p.sup_cubierta !== p.sup_total ? `${miles(p.sup_cubierta)} m² cubiertos` : null,
+  ].filter(Boolean).join(' · ');
+  const antiguedad = p.antiguedad === -1 ? 'En construcción' : p.antiguedad === 0 ? 'A estrenar' : p.antiguedad > 0 ? `${p.antiguedad} años de antigüedad` : null;
+  const operacion = clase === 'temporario' ? 'Alquiler temporario' : clase === 'alquiler' ? 'Alquiler' : 'Venta';
+  return [
+    `🏠 *${p.direccion || p.titulo}*`,
+    lugar && `📍 ${lugar}`,
+    p.precio && `💰 ${operacion} · ${p.moneda} ${miles(p.precio)}${clase === 'alquiler' ? ' por mes' : ''}`,
+    ambientes && `🛏️ ${ambientes}`,
+    superficie && `📐 ${superficie}`,
+    p.expensas && `🧾 Expensas: ARS ${miles(p.expensas)}`,
+    antiguedad && `🏗️ ${antiguedad}`,
+    p.url && `🔗 ${p.url}`,
+  ].filter(Boolean).join('\n');
+}
+
 function resumen(p) {
   return { id: p.id, codigo: p.reference_code, operacion: p.operacion, tipo: p.tipo, direccion: p.direccion, zona: p.zona, precio: p.precio ? `${p.moneda} ${miles(p.precio)}` : null, estado: p.estado };
 }
 
-module.exports = { sync, buscar, filtrar, refrescar, get, slugify, slugDe, claseOperacion, mapear, fichaParaAgente, resumen };
+module.exports = { sync, buscar, filtrar, refrescar, get, slugify, slugDe, claseOperacion, mapear, fichaParaAgente, fichaWhatsApp, resumen };

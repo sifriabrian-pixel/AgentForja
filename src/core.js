@@ -57,6 +57,8 @@ async function applyGetProperty(waId, input, store = repo) {
   store.addEvent(lead.id, 'propiedad_consultada', { propiedad_id: propiedad.id, por: res.por, estado: propiedad.estado, verificada });
 
   const ficha = tokko.fichaParaAgente(propiedad);
+  // Bloque listo para mandar al lead la primera vez que se presenta la unidad.
+  ficha.ficha_whatsapp = tokko.fichaWhatsApp(propiedad);
   if (process.env.TOKKO_API_KEY && !verificada) ficha.disponibilidad_sin_verificar = true;
   if (propiedad.estado !== 'disponible') ficha.instruccion = 'Esta unidad NO está disponible. Avisalo con tacto y preguntá "¿qué estás buscando?".';
   return JSON.stringify(ficha);
@@ -389,6 +391,24 @@ function command(text, { store = repo, now } = {}) {
   });
 }
 
+// El primer mensaje de la conversación siempre saluda según la hora y se
+// presenta (frase de Alejandro). El modelo a veces lo saltea cuando el lead
+// arranca con un link; acá se garantiza en código. Si todavía no se sabe el
+// nombre y la respuesta no lo pide, se pide al final.
+function asegurarSaludo(texto, filas, lead) {
+  if (filas.some((m) => m.direction === 'out')) return texto;
+  let salida = texto;
+  if (!/^\s*buen[oa]s (d[ií]as|tardes|noches)/i.test(salida)) {
+    salida = `${seguimiento.saludo()} ¿cómo estás? Te saluda ${config.AGENT_IDENTITY}.\n\n${salida}`;
+  }
+  if (!lead.datos.nombre && !/nombre/i.test(salida) && !lead.derived_at) {
+    // Una sola pregunta por mensaje: si el modelo ya cerró con otra, la del nombre la reemplaza.
+    const sinPregunta = salida.replace(/\s*¿[^¿]*\?\s*$/, '').trimEnd();
+    salida = `${sinPregunta}\n\n¿Me dirías tu nombre?`;
+  }
+  return salida;
+}
+
 // ─── Turno ───────────────────────────────────────────────────────────────────
 
 // Responde los mensajes pendientes de un número en un solo turno. Deja la
@@ -443,6 +463,8 @@ async function turno(waId, deps = {}, vuelta = 1, yaDerivadas = null) {
     else if (ultima?.tipo === 'humano') texto = 'Gracias por escribir, te paso con un asesor que te responde eso.';
     else texto = MSG_VACIO;
   }
+
+  texto = asegurarSaludo(texto, filas, lead);
 
   // Sin derivar y sin pausa: queda programado el seguimiento por si no vuelve a escribir.
   if (!store.isPaused(lead)) seguimiento.programar(lead, store);
