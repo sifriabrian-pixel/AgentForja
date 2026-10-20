@@ -9,6 +9,8 @@ const crypto = require('crypto');
 const apiBase = () => (process.env.WHATSAPP_API_BASE || 'https://graph.facebook.com/v21.0').replace(/\/+$/, '');
 const esKapso = () => /(^|\.)kapso\.ai$/.test(new URL(apiBase()).hostname);
 
+const reintentoVentanaMs = () => Number(process.env.KAPSO_RETRY_MS ?? 5000);
+
 // Meta usa "Authorization: Bearer <token>". Kapso pide la API key del proyecto
 // en "X-API-Key" y rechaza (401) un Bearer con esa key.
 function encabezados() {
@@ -40,11 +42,21 @@ async function post(body) {
     return { messages: [{ id }] };
   }
   const url = `${apiBase()}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
-  const res = await fetch(url, {
+  const enviar = () => fetch(url, {
     method: 'POST',
     headers: encabezados(),
     body: JSON.stringify({ messaging_product: 'whatsapp', ...body }),
   });
+  let res = await enviar();
+  // Kapso chequea la ventana de 24 hs por su cuenta antes de llamar a Meta, y
+  // apenas entra un mensaje (conversación recién creada) a veces todavía no la
+  // ve abierta: rechaza con 422 sin haber enviado nada. Se reintenta una vez.
+  if (res.status === 422 && esKapso() && body.type !== 'template') {
+    const detalle = await res.text();
+    if (!/24-hour window/i.test(detalle)) throw new Error(`WhatsApp API 422: ${detalle}`);
+    await new Promise((r) => setTimeout(r, reintentoVentanaMs()));
+    res = await enviar();
+  }
   if (!res.ok) throw new Error(`WhatsApp API ${res.status}: ${await res.text()}`);
   const json = await res.json();
   if (json?.messages?.[0]?.message_status === 'failed') {

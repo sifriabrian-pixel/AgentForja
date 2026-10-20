@@ -75,3 +75,30 @@ test('con Kapso el número se envía tal cual llegó (sin quitar el 9)', async (
   await whatsapp.sendMessage('5493415551234', 'hola');
   assert.deepEqual(tos, ['5493415551234', '543415551234']);
 });
+
+test('Kapso: si rechaza por la ventana de 24 hs apenas entró el mensaje, reintenta una vez', async () => {
+  process.env.WHATSAPP_DRY_RUN = '';
+  process.env.KAPSO_RETRY_MS = '1';
+  process.env.WHATSAPP_API_BASE = 'https://api.kapso.ai/meta/whatsapp/v24.0';
+  process.env.WHATSAPP_PHONE_NUMBER_ID = '1426503647210628';
+  const ventana = { ok: false, status: 422, text: async () => '{"error":"Cannot send non-template messages outside the 24-hour window."}' };
+  const bien = { ok: true, status: 200, json: async () => ({ messages: [{ id: 'wamid.ok' }] }) };
+
+  let n = 0;
+  global.fetch = async () => (n++ === 0 ? ventana : bien);
+  assert.equal((await whatsapp.sendMessage('5493415551234', 'hola')).messages[0].id, 'wamid.ok');
+  assert.equal(n, 2);
+
+  // Si sigue cerrada, falla (no reintenta para siempre).
+  n = 0;
+  global.fetch = async () => { n += 1; return ventana; };
+  await assert.rejects(() => whatsapp.sendMessage('5493415551234', 'hola'), /422/);
+  assert.equal(n, 2);
+
+  // Otro 422 (payload inválido) no se reintenta.
+  n = 0;
+  global.fetch = async () => { n += 1; return { ok: false, status: 422, text: async () => '{"error":"Invalid message payload"}' }; };
+  await assert.rejects(() => whatsapp.sendMessage('5493415551234', 'hola'), /Invalid message payload/);
+  assert.equal(n, 1);
+  delete process.env.KAPSO_RETRY_MS;
+});
