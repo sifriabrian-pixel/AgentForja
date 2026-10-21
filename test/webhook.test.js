@@ -294,8 +294,9 @@ test('comandos: solo valen desde HANDOFF_WHATSAPP; ese número nunca es tratado 
 test('job de seguimiento: envía la plantilla una vez aunque corra dos veces', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
   const sent = captureSends();
-  fakeClaude(toolThenText(null, null, 'hola'));
-  await entra(WA, text('hola'));
+  // El seguimiento es para quien recibió la ficha de una unidad en venta y no contestó.
+  fakeClaude(toolThenText('get_property', { referencia: P.ayacucho }, 'Te paso la ficha. ¿Me dirías tu nombre?'));
+  await entra(WA, text('me interesa el de Ayacucho'));
   const lead = repo.getCurrentLead(WA);
   assert.equal(await agent.runFollowups(), 0, 'todavía no venció');
 
@@ -322,8 +323,8 @@ test('la base sobrevive a un reinicio: historial, derivaciones y seguimiento pro
   const ruta = tmpDbPath();
   await freshDb(ruta);
   captureSends();
-  fakeClaude(toolThenText(null, null, 'hola'));
-  await entra(WA, text('hola'));
+  fakeClaude(toolThenText('get_property', { referencia: P.ayacucho }, 'Te paso la ficha. ¿Me dirías tu nombre?'));
+  await entra(WA, text('me interesa el de Ayacucho'));
   const leadId = repo.getCurrentLead(WA).id;
 
   db.close(); // "redeploy"

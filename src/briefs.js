@@ -84,15 +84,16 @@ function notaBusqueda(d) {
 
 // ─── Visita (§5.2) ───────────────────────────────────────────────────────────
 
-// Destino (vivir / inversión) y plazo de compra van solo si el lead los dijo.
-function briefVisita({ propiedad, disponibilidad, destino, plazo }, { waId, nombre }) {
+// Destino (vivir / inversión) y forma de pago (contado, crédito o necesita
+// vender para comprar) van solo si el lead los dijo.
+function briefVisita({ propiedad, disponibilidad, destino, pago }, { waId, nombre }) {
   return [
     `(VISITA ${operacionMayus(propiedad.operacion)}) ${limpio(propiedad.direccion || propiedad.titulo)}`,
     `Cód. Tokko ${codigoTokko(propiedad)}`,
     propiedad.url,
     `Disponibilidad: ${tiene(disponibilidad) ? limpio(disponibilidad) : 'a coordinar'}`,
     tiene(destino) && `Destino: ${textoDestino(destino).replace(/^, (es para )?/, '')}`,
-    tiene(plazo) && `Plazo: ${limpio(plazo)}`,
+    tiene(pago) && `Pago: ${limpio(pago)}`,
     nombre || 'sin nombre',
     telefono(waId),
   ].filter(Boolean).join(' - ');

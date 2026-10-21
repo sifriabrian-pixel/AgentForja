@@ -11,6 +11,13 @@ let n = 0;
 const msg = (text, now = T0) => ({ conversationId: WA, from: WA, text, now, messageId: `s.${n += 1}` });
 const DIA5 = masDias(T0, 5); // lunes 15:00 + 5 días = sábado 15:00 (dentro de la franja)
 
+// El seguimiento es solo para quien recibió la ficha de una unidad en venta y no
+// contestó: el primer turno de estos tests manda la ficha de Ayacucho.
+const conFicha = (primero, ...resto) => scriptedLlm(async (h, c, hist) => {
+  await h.get_property({ referencia: P.ayacucho });
+  return typeof primero === 'function' ? primero(h, c, hist) : primero;
+}, ...resto);
+
 // Como el adapter de WhatsApp: si hay que enviar, confirma el envío.
 async function tick(now, { ok = true } = {}) {
   const out = await core.tick(WA, now);
@@ -48,34 +55,37 @@ test('recibió la ficha y no contestó: al día siguiente le escribe retomando l
   assert.deepEqual((await tick(masHoras(T0, 22))).actions, [], 'todavía no');
   const out = await tick(masHoras(T0, 23));
   assert.equal(out.actions[0].payload.via, 'texto', 'dentro de la ventana de 24 h: sin plantilla');
-  assert.match(out.messages[0], /^Buenas tardes ¿cómo estás\? Te saluda el asistente de Forja Propiedades\. ¿Pudiste ver la ficha que te pasé\?/);
+  assert.match(out.messages[0], /^Buenas tardes ¿cómo estás\? Te saluda el asistente de Forja Propiedades\. ¿Pudiste ver la ficha\? ¿Se ajusta a lo que buscás\?$/);
   assert.equal(out.followup.status, 'sent');
   assert.deepEqual((await tick(masHoras(T0, 47))).actions, [], 'un solo seguimiento');
 });
 
-test('sin ficha de por medio, el seguimiento usa la frase de Alejandro', async () => {
+test('sin ficha de una unidad en venta no hay seguimiento (sin unidad, o alquiler)', async () => {
   delete process.env.FOLLOWUP_DAYS;
-  await core.handleMessage(msg('hola, busco algo en Fisherton'), { llm: scriptedLlm('¿Estás buscando para comprar o para alquilar?') });
-  const out = await tick(masHoras(T0, 23));
-  assert.match(out.messages[0], /¿tenés alguna búsqueda activa en la que podamos ayudarte\?$/);
+  const o1 = await core.handleMessage(msg('hola, busco algo en Fisherton'), { llm: scriptedLlm('¿Estás buscando para comprar o para alquilar?') });
+  assert.equal(o1.state.followup, null);
+
+  const WA2 = '5493415550099';
+  const llm = scriptedLlm(async (h) => { await h.get_property({ referencia: P.aurea }); return 'Te paso la ficha. ¿Me dirías tu nombre?'; });
+  const o2 = await core.handleMessage({ conversationId: WA2, from: WA2, text: 'me interesa Aurea', now: T0, messageId: 'alq.1' }, { llm });
+  assert.equal(o2.state.propiedadId, P.aurea);
+  assert.equal(o2.state.followup, null, 'en alquiler no hay seguimiento');
 });
 
-test('cada respuesta del agente programa el seguimiento a 5 días; si el lead escribe, se corre', async () => {
-  const llm = scriptedLlm('hola', 'ok');
-  const o1 = await core.handleMessage(msg('hola'), { llm });
+test('se programa al mandar la ficha; si el lead contesta, se cancela y no se vuelve a programar', async () => {
+  const llm = conFicha('Te paso la ficha. ¿Me dirías tu nombre?', '¿La buscás para vivir o como inversión?');
+  const o1 = await core.handleMessage(msg('me interesa el de Ayacucho'), { llm });
   assert.deepEqual(o1.state.followup, { status: 'pending', dueAt: DIA5, reason: null, enviados: 0 });
 
-  core.ingest(msg('una pregunta', masDias(T0, 2)));
-  assert.equal(repo.getFollowup(o1.state.leadId).status, 'cancelled', 'el lead escribió: se cancela');
-  const o2 = await core.processPending(WA, masDias(T0, 2), { llm });
-  assert.deepEqual(o2.state.followup, { status: 'pending', dueAt: masDias(T0, 7), reason: null, enviados: 0 }, 'y se vuelve a programar desde la última respuesta');
-  assert.equal(clock.run(masDias(T0, 2), () => repo.dueFollowups().length), 0, 'a esa hora no hay nada vencido');
+  const o2 = await core.handleMessage(msg('Martina', masDias(T0, 2)), { llm });
+  assert.deepEqual({ status: o2.state.followup.status, reason: o2.state.followup.reason }, { status: 'cancelled', reason: 'lead_escribio' }, 'contestó: ya no corresponde');
+  assert.deepEqual((await tick(masDias(T0, 9))).actions, []);
 });
 
 test('con dos toques configurados (3 y 7 días) salen dos mensajes y ninguno más', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
   process.env.FOLLOWUP_DAYS = '3,7';
-  const llm = scriptedLlm('hola', 'dale, cualquier cosa avisame');
+  const llm = conFicha('hola', 'dale, cualquier cosa avisame');
   await core.handleMessage(msg('hola'), { llm });
 
   assert.deepEqual((await tick(masDias(T0, 2))).actions, []);
@@ -94,27 +104,16 @@ test('con dos toques configurados (3 y 7 días) salen dos mensajes y ninguno má
   assert.deepEqual((await tick(masDias(T0, 20))).actions, []);
 });
 
-test('con dos toques: si responde al primero, el segundo se cuenta desde la nueva respuesta del agente', async () => {
-  process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
-  process.env.FOLLOWUP_DAYS = '3,7';
-  const llm = scriptedLlm('hola', 'perfecto');
-  await core.handleMessage(msg('hola'), { llm });
-  await tick(masDias(T0, 3));
-  const o = await core.handleMessage(msg('ahora no, gracias', masDias(T0, 4)), { llm });
-  assert.deepEqual(o.state.followup, { status: 'pending', dueAt: masDias(T0, 11), reason: null, enviados: 1 });
-});
-
-test('programar_seguimiento: el lead declina y no busca nada', async () => {
+test('programar_seguimiento: sin ficha de una unidad en venta no agenda nada', async () => {
   let r;
   const llm = scriptedLlm(async (h) => { r = await h.programar_seguimiento({ motivo: 'solo miraba' }); return 'Perfecto, cualquier cosa acá estamos.'; });
   const out = await core.handleMessage(msg('no, gracias, solo miraba'), { llm });
-  assert.match(r, /Seguimiento agendado/);
-  assert.equal(out.state.followup.status, 'pending');
-  assert.ok(repo.events(out.state.leadId).some((e) => e.type === 'seguimiento_pedido'));
+  assert.match(r, /No se agenda seguimiento \(sin ficha\)/, 'sin ficha de venta no hay seguimiento');
+  assert.equal(out.state.followup, null);
 });
 
 test('sin plantilla configurada: fuera de la ventana de 24 hs no se manda nada (ni texto libre)', async () => {
-  await core.handleMessage(msg('hola'), { llm: scriptedLlm('hola') });
+  await core.handleMessage(msg('hola'), { llm: conFicha('hola') });
   assert.deepEqual((await tick(masDias(T0, 4))).messages, [], 'todavía no toca');
 
   const out = await tick(DIA5);
@@ -133,11 +132,11 @@ test('sin plantilla configurada: fuera de la ventana de 24 hs no se manda nada (
 
 test('con plantilla: se envía por plantilla, una sola vez, y nunca más a ese lead', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
-  const llm = scriptedLlm('hola', '¿En qué zona te gustaría?', 'bueno');
+  const llm = conFicha('hola', '¿Te interesa?', 'bueno');
   await core.handleMessage(msg('hola'), { llm });
 
   const out = await tick(DIA5);
-  assert.deepEqual(out.messages, ['Hola ¿cómo estás? Te saluda el asistente de Forja Propiedades ¿tenés alguna búsqueda activa en la que podamos ayudarte?']);
+  assert.deepEqual(out.messages, ['Hola ¿cómo estás? Te saluda el asistente de Forja Propiedades. ¿Pudiste ver la ficha? ¿Se ajusta a lo que buscás?']);
   assert.equal(out.actions[0].type, 'send_followup');
   assert.deepEqual({ via: out.actions[0].payload.via, plantilla: out.actions[0].payload.plantilla, idioma: out.actions[0].payload.idioma, params: out.actions[0].payload.params },
     { via: 'plantilla', plantilla: 'forja_seguimiento', idioma: 'es_AR', params: {} });
@@ -145,10 +144,10 @@ test('con plantilla: se envía por plantilla, una sola vez, y nunca más a ese l
 
   assert.deepEqual((await tick(masHoras(DIA5, 1))).actions, [], 'la segunda pasada del job no reenvía');
 
-  // El lead responde al seguimiento: el agente lo sabe y entra en modo búsqueda.
-  const o2 = await core.handleMessage(msg('sí, busco 2 dorm en Fisherton', masHoras(DIA5, 3)), { llm });
+  // El lead responde al seguimiento: el agente lo sabe y retoma la conversación.
+  const o2 = await core.handleMessage(msg('sí, la vi, me interesa', masHoras(DIA5, 3)), { llm });
   assert.match(llm.llamadas[1].contexto, /Tu último mensaje fue el de seguimiento/);
-  assert.match(llm.llamadas[1].historial.map((m) => m.content).join('\n'), /tenés alguna búsqueda activa/);
+  assert.match(llm.llamadas[1].historial.map((m) => m.content).join('\n'), /Pudiste ver la ficha/);
   assert.equal(o2.state.followup.status, 'sent', 'ya recibió su seguimiento: no se programa otro');
 
   await core.handleMessage(msg('no, dejá', masHoras(DIA5, 4)), { llm });
@@ -157,14 +156,14 @@ test('con plantilla: se envía por plantilla, una sola vez, y nunca más a ese l
 
 test('dos pasadas simultáneas del job: solo una toma el envío', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
-  await core.handleMessage(msg('hola'), { llm: scriptedLlm('hola') });
+  await core.handleMessage(msg('hola'), { llm: conFicha('hola') });
   const [a, b] = await Promise.all([core.tick(WA, DIA5), core.tick(WA, DIA5)]);
   assert.equal(a.actions.length + b.actions.length, 1);
 });
 
 test('si la plantilla falla (no aprobada), queda como fallido y no se reintenta ni se manda texto', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
-  await core.handleMessage(msg('hola'), { llm: scriptedLlm('hola') });
+  await core.handleMessage(msg('hola'), { llm: conFicha('hola') });
   const out = await tick(DIA5, { ok: false });
   assert.equal(out.followup.status, 'failed');
   assert.match(out.followup.reason, /no aprobada/);
@@ -174,7 +173,7 @@ test('si la plantilla falla (no aprobada), queda como fallido y no se reintenta 
 
 test('dentro de la ventana de 24 hs (FOLLOWUP_DAYS corto) se envía como texto, sin plantilla', async () => {
   process.env.FOLLOWUP_DAYS = '0.125'; // 3 horas
-  await core.handleMessage(msg('hola'), { llm: scriptedLlm('hola') });
+  await core.handleMessage(msg('hola'), { llm: conFicha('hola') });
   const out = await tick(masHoras(T0, 3));
   assert.equal(out.actions[0].payload.via, 'texto');
   assert.equal(out.followup.status, 'sent');
@@ -183,7 +182,7 @@ test('dentro de la ventana de 24 hs (FOLLOWUP_DAYS corto) se envía como texto, 
 test('fuera de la franja horaria espera; no se manda de madrugada', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
   const noche = '2026-10-13T02:30:00.000Z'; // 23:30 en Argentina
-  await core.handleMessage(msg('hola', noche), { llm: scriptedLlm('hola') });
+  await core.handleMessage(msg('hola', noche), { llm: conFicha('hola') });
   const aLas2330 = await tick(masDias(noche, 5));
   assert.equal(aLas2330.meta.skipped, 'fuera_de_franja');
   const aLas10 = await tick(masHoras(masDias(noche, 5), 10.5)); // 10:00 del día siguiente
@@ -195,7 +194,7 @@ test('no hay seguimiento para leads derivados, colegas ni quienes pidieron no se
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
 
   // Derivado: el seguimiento que estaba programado se cancela.
-  const llm = scriptedLlm('hola', async (h) => { await h.derivar_visita({ propiedad_id: P.ayacucho }); return config.MSG_VISITA_DERIVADA; });
+  const llm = conFicha('hola', async (h) => { await h.derivar_visita({ propiedad_id: P.ayacucho }); return config.MSG_VISITA_DERIVADA; });
   await core.handleMessage(msg('hola'), { llm });
   const o2 = await core.handleMessage(msg('quiero visitar el de Ayacucho', masHoras(T0, 1)), { llm });
   assert.deepEqual({ status: o2.state.followup.status, reason: o2.state.followup.reason }, { status: 'cancelled', reason: 'derivado' });
@@ -207,7 +206,7 @@ test('no hay seguimiento para leads derivados, colegas ni quienes pidieron no se
 
 test('cancelar_seguimiento: el lead pide que no lo contacten', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
-  const llm = scriptedLlm('hola', async (h) => { await h.cancelar_seguimiento({}); return 'Entendido, que tengas buen día.'; });
+  const llm = conFicha('hola', async (h) => { await h.cancelar_seguimiento({}); return 'Entendido, que tengas buen día.'; });
   await core.handleMessage(msg('hola'), { llm });
   const out = await core.handleMessage(msg('no me escriban más', masHoras(T0, 1)), { llm });
   assert.equal(out.state.datos.no_contactar, true);
@@ -217,9 +216,26 @@ test('cancelar_seguimiento: el lead pide que no lo contacten', async () => {
 
 test('si una persona tomó la conversación, el seguimiento automático no sale', async () => {
   process.env.FOLLOWUP_TEMPLATE_NAME = 'forja_seguimiento';
-  await core.handleMessage(msg('hola'), { llm: scriptedLlm('hola') });
+  await core.handleMessage(msg('hola'), { llm: conFicha('hola') });
   core.command(`#pausa ${WA}`, { now: masDias(T0, 1) });
   const out = await tick(DIA5);
   assert.deepEqual(out.actions, []);
   assert.equal(out.followup.reason, 'intervencion_humana');
+});
+
+test('ficha de noche: el seguimiento se adelanta a las 19:50 del día siguiente para salir sin plantilla', async () => {
+  delete process.env.FOLLOWUP_DAYS; // 23 h
+  const noche = '2026-10-13T01:00:00.000Z'; // lunes 22:00 en Argentina
+  const o = await core.handleMessage(msg('me interesa el de Ayacucho', noche), { llm: conFicha('Te paso la ficha. ¿Me dirías tu nombre?') });
+  assert.equal(o.state.followup.dueAt, '2026-10-13T22:50:00.000Z', 'martes 19:50 en Argentina (21 h 50 después)');
+  const out = await tick('2026-10-13T22:50:00.000Z');
+  assert.equal(out.actions[0].payload.via, 'texto', 'dentro de la ventana de 24 h');
+  assert.equal(out.followup.status, 'sent');
+});
+
+test('ficha de madrugada: no se adelanta a menos de una hora; espera a la franja', async () => {
+  delete process.env.FOLLOWUP_DAYS;
+  const madrugada = '2026-10-13T10:30:00.000Z'; // martes 07:30 en Argentina → 23 h = miércoles 06:30
+  const o = await core.handleMessage(msg('me interesa el de Ayacucho', madrugada), { llm: conFicha('Te paso la ficha. ¿Me dirías tu nombre?') });
+  assert.equal(o.state.followup.dueAt, '2026-10-13T22:50:00.000Z', 'martes 19:50: 12 h 20 después, el mismo día');
 });

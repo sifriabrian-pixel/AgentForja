@@ -49,7 +49,7 @@ Notas:
 
 ## 2. Seguimiento al lead — `forja_seguimiento`
 
-Es el único mensaje que el agente le manda a un lead que no avanzó, a los 5 días.
+Es el único mensaje que recibe quien vio la ficha de una unidad en venta y no contestó. Normalmente sale a las 23 h como mensaje común; la plantilla solo hace falta si se corre fuera de la ventana de 24 h (por ejemplo, de noche, porque el seguimiento solo sale entre las 9 y las 20).
 
 | Campo | Valor |
 |---|---|
@@ -63,7 +63,7 @@ Es el único mensaje que el agente le manda a un lead que no avanzó, a los 5 d�
 **Cuerpo** (sin variables):
 
 ```
-Hola ¿cómo estás? Te saluda el asistente de Forja Propiedades ¿tenés alguna búsqueda activa en la que podamos ayudarte?
+Hola ¿cómo estás? Te saluda el asistente de Forja Propiedades. ¿Pudiste ver la ficha? ¿Se ajusta a lo que buscás?
 ```
 
 Variable de entorno: `FOLLOWUP_TEMPLATE_NAME=forja_seguimiento`

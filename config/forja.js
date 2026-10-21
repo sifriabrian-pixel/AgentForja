@@ -56,12 +56,17 @@ module.exports = {
   // Dentro de la ventana de 24 hs (texto libre, con el saludo según la hora):
   MSG_SEGUIMIENTO: '{saludo} ¿cómo estás? Te saluda {identidad} ¿tenés alguna búsqueda activa en la que podamos ayudarte?',
   // [DEFAULT] Si lo último que recibió fue la ficha de una unidad, el seguimiento la retoma.
-  MSG_SEGUIMIENTO_FICHA: '{saludo} ¿cómo estás? Te saluda {identidad}. ¿Pudiste ver la ficha que te pasé? Si te interesa, coordinamos una visita; y si no es lo que buscás, contame qué estás buscando y te ayudo.',
+  // Texto de Forja: lo recibe quien vio la ficha de una unidad en venta y no contestó.
+  MSG_SEGUIMIENTO_FICHA: '{saludo} ¿cómo estás? Te saluda {identidad}. ¿Pudiste ver la ficha? ¿Se ajusta a lo que buscás?',
   // Fuera de la ventana sale la plantilla aprobada. Tiene que decir lo mismo que
   // la plantilla cargada en Meta (docs/plantillas-meta.md): es lo que queda en el historial.
-  MSG_SEGUIMIENTO_PLANTILLA: 'Hola ¿cómo estás? Te saluda {identidad} ¿tenés alguna búsqueda activa en la que podamos ayudarte?',
+  MSG_SEGUIMIENTO_PLANTILLA: 'Hola ¿cómo estás? Te saluda {identidad}. ¿Pudiste ver la ficha? ¿Se ajusta a lo que buscás?',
 
-  // [DEFAULT] Horas que el agente queda callado cuando interviene una persona.
+  // Coexistencia: si Alejandro escribe a mano en un chat, el agente corta el flujo
+  // en esa conversación hasta #reanudar. 0 = sin vencimiento (pedido de Forja);
+  // un número = horas de pausa.
+  get ECHO_PAUSE_HOURS() { const n = Number(env('ECHO_PAUSE_HOURS', 0)); return Number.isFinite(n) && n > 0 ? n : 0; },
+  // [DEFAULT] Horas que el agente queda callado después de derivar a una persona.
   get HUMAN_TAKEOVER_HOURS() { return num('HUMAN_TAKEOVER_HOURS', 24); },
   comandos: { pausa: '#pausa', reanudar: '#reanudar' },
 
@@ -72,6 +77,8 @@ module.exports = {
   // Temporario y mascotas: [DEFAULT] a confirmar con Forja.
   MSG_VISITA_DERIVADA: 'Perfecto, tu pedido de visita fue derivado, te va a contactar el encargado de comercializar ésta unidad',
   MSG_BUSQUEDA_DERIVADA: 'Perfecto, vamos a derivar la búsqueda al asesor de ventas para que te contacte y evalúen opciones',
+  // [DEFAULT] Alquiler (no temporario): apenas da el nombre se deriva y la conversación sigue con un asesor.
+  MSG_ALQUILER_DERIVADO: 'Gracias. Ya le pasé tu consulta a un asesor, te va a contactar a la brevedad.',
   MSG_TEMPORARIO_DERIVADO: 'Perfecto, ya le pasé tu consulta al asesor. Te va a contactar para confirmarte la disponibilidad en esas fechas.',
   // Regla de Forja: si la ficha no dice nada sobre mascotas, se considera que acepta.
   MSG_MASCOTAS: 'En principio sí, te lo confirma el asesor',

@@ -68,9 +68,9 @@ test('atención humana: motivo, resumen en una línea, nombre y teléfono', () =
   assert.match(briefs.briefVisita({ propiedad: { id: '1', operacion: 'Alquiler temporario', direccion: 'X', url: 'u' } }, lead), /^\(VISITA ALQUILER\)/);
 });
 
-test('visita: si el lead los dijo, el brief suma destino y plazo de compra', () => {
+test('visita: si el lead los dijo, el brief suma destino y forma de pago', () => {
   const propiedad = { id: '10496295', reference_code: 'FAP10496295', operacion: 'Venta', direccion: 'Ayacucho 1300', url: 'https://x' };
-  assert.equal(briefs.briefVisita({ propiedad, disponibilidad: 'jueves a la tarde', destino: 'para vivir', plazo: 'en 3 meses' }, lead),
-    '(VISITA VENTA) Ayacucho 1300 - Cód. Tokko FAP10496295 / 10496295 - https://x - Disponibilidad: jueves a la tarde - Destino: vivienda - Plazo: en 3 meses - Maria Angélica - +5493415551234');
+  assert.equal(briefs.briefVisita({ propiedad, disponibilidad: 'jueves a la tarde', destino: 'para vivir', pago: 'apto crédito' }, lead),
+    '(VISITA VENTA) Ayacucho 1300 - Cód. Tokko FAP10496295 / 10496295 - https://x - Disponibilidad: jueves a la tarde - Destino: vivienda - Pago: apto crédito - Maria Angélica - +5493415551234');
   assert.match(briefs.briefVisita({ propiedad, destino: 'inversión' }, lead), / - Destino: inversión - Maria Angélica/);
 });

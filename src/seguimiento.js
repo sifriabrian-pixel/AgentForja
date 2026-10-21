@@ -9,6 +9,7 @@
 const config = require('../config/forja');
 const clock = require('./clock');
 const repo = require('./repo');
+const tokko = require('./tokko');
 
 const HORA = 60 * 60 * 1000;
 const DIA = 24 * HORA;
@@ -33,8 +34,13 @@ function textoSeguimiento(lead = null) {
 }
 
 // A quién no se le hace seguimiento.
+// Solo hay seguimiento para quien recibió la ficha de una unidad EN VENTA y no
+// contestó (pedido de Forja). En alquiler no hay seguimiento.
 function motivoSinSeguimiento(lead) {
   if (lead.derived_at) return 'derivado';
+  const prop = lead.datos.propiedad_id ? tokko.get(lead.datos.propiedad_id) : null;
+  if (!prop) return 'sin_ficha';
+  if (tokko.claseOperacion(prop.operacion) !== 'venta') return 'alquiler';
   if (lead.datos.colega) return 'colega';
   if (lead.datos.no_contactar) return 'no_contactar';
   if (lead.status === 'cerrado') return 'cerrado';
@@ -51,7 +57,23 @@ function programar(lead, store = repo) {
   const enviados = store.getFollowup(lead.id)?.step || 0;
   if (enviados >= dias.length) return false;
   const ancla = clock.nowISO();
-  return store.armFollowup(lead.id, venceEn(ancla, dias[enviados]), ancla);
+  return store.armFollowup(lead.id, dentroDeFranja(venceEn(ancla, dias[enviados]), ancla), ancla);
+}
+
+// El seguimiento solo sale en la franja horaria (9 a 20). Si el vencimiento cae
+// fuera, se adelanta a las 19:50 anteriores: así sigue dentro de la ventana de
+// 24 hs y sale como mensaje común. Si eso lo deja a menos de una hora de la
+// ficha, se respeta el vencimiento original.
+function dentroDeFranja(dueAt, ancla) {
+  const { desde, hasta } = config.seguimiento.franja;
+  const fecha = new Date(dueAt);
+  const partes = new Intl.DateTimeFormat('en-GB', { timeZone: config.TIMEZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(fecha);
+  const h = Number(partes.find((p) => p.type === 'hour').value);
+  const m = Number(partes.find((p) => p.type === 'minute').value);
+  if (h >= desde && h < hasta) return dueAt;
+  const minutosDesdeCierre = ((h - hasta + 24) % 24) * 60 + m; // cuánto pasó desde las 20:00
+  const adelantado = new Date(fecha.getTime() - (minutosDesdeCierre + 10) * 60 * 1000);
+  return adelantado - new Date(ancla) >= HORA ? adelantado.toISOString() : dueAt;
 }
 
 // Después de enviar un toque: cuándo vence el siguiente (contado desde la misma

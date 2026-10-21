@@ -249,7 +249,7 @@ test('si Claude deriva pero no escribe nada, el lead recibe igual la frase de de
   assert.match(out.messages[0], conSaludo(config.MSG_VISITA_DERIVADA), 'primer mensaje: saludo + frase de derivación');
 });
 
-test('echo: cuando una persona escribe desde el número de Forja, el agente se pausa 24 hs en ese chat', async () => {
+test('echo (coexistencia): cuando Alejandro escribe a mano en el chat, el agente corta el flujo hasta #reanudar', async () => {
   const llm = scriptedLlm('Buenas tardes ¿me dirías tu nombre?', 'respuesta después de la pausa');
   await core.handleMessage(msg('hola'), { llm });
 
@@ -261,7 +261,12 @@ test('echo: cuando una persona escribe desde el número de Forja, el agente se p
   assert.deepEqual(o2.messages, []);
   assert.equal(o2.state.paused, true);
 
-  const o3 = await core.handleMessage(msg('seguís ahí?', { now: masHoras(T0, 26) }), { llm });
+  // Sigue callado días después: la pausa por echo no vence sola.
+  const o3a = await core.handleMessage(msg('seguís ahí?', { now: masHoras(T0, 72) }), { llm });
+  assert.deepEqual(o3a.messages, []);
+  // Alejandro lo reactiva con #reanudar.
+  core.command(`#reanudar ${WA}`, { now: masHoras(T0, 73) });
+  const o3 = await core.handleMessage(msg('hola?', { now: masHoras(T0, 74) }), { llm });
   assert.equal(o3.messages[0], 'respuesta después de la pausa');
   const historial = llm.llamadas[1].historial.map((m) => m.content).join('\n');
   assert.match(historial, /\[Mensaje escrito por una persona del equipo de Forja\] Hola, soy Alejandro/, 'el agente ve lo que escribió la persona');
@@ -333,12 +338,16 @@ test('mensajes que entran mientras Claude responde: se contesta todo junto y la 
   assert.equal(repo.pendingInbound(WA).length, 0);
 });
 
-test('el prompt pide presentar la unidad con diferenciales y seguir con destino, plazo y recién después la visita', () => {
+test('el prompt sigue el flujo de venta de Forja: vivir o inversión, presupuesto o vender, crédito o contado, visita', () => {
   const prompt = require('../prompts/forja').buildSystemPrompt();
   assert.match(prompt, /SIEMPRE empieza con el saludo/);
   assert.match(prompt, /En la primera respuesta NO ofrezcas visita/);
-  const orden = ['¿La buscás para vivir o como inversión?', '¿En qué plazo estás analizando hacer la compra? ¿Lo antes posible, 3 meses, 6?', 'Perfecto ¿Alguna duda o te parece si coordinamos una visita con uno de nuestros vendedores?'].map((t) => prompt.indexOf(t));
-  assert.ok(orden.every((i) => i > 0) && orden[0] < orden[1] && orden[1] < orden[2], 'las tres preguntas están, en ese orden');
+  const orden = ['¿La buscás para vivir o como inversión?', '¿Disponés del presupuesto o necesitás vender para comprar?', '¿Sería apto crédito o de contado?', 'Perfecto ¿Te interesa coordinar una visita para conocerla?'].map((t) => prompt.indexOf(t));
+  assert.ok(orden.every((i) => i > 0) && orden[0] < orden[1] && orden[1] < orden[2] && orden[2] < orden[3], 'las preguntas están, en ese orden');
+  assert.match(prompt, /¿Te interesa visitarla o tenés alguna duda\?/, 'camino de quien necesita vender');
+  assert.doesNotMatch(prompt, /En qué plazo/);
+  assert.match(prompt, /NO digas que no tenés el dato/);
+  assert.match(prompt, /Apenas te dice el nombre, llamá a derivar_a_humano con motivo "alquiler"/);
 });
 
 test('primer mensaje sin saludo: el código agrega el saludo y pide el nombre en vez de otra pregunta', async () => {
@@ -375,4 +384,18 @@ test('get_property trae la ficha lista para WhatsApp, armada con datos de Tokko'
   const prompt = require('../prompts/forja').buildSystemPrompt();
   assert.match(prompt, /"ficha_whatsapp"/);
   assert.match(prompt, /UNA línea que empiece con "✨"/);
+});
+
+test('unidad en alquiler: al dar el nombre se deriva con el mensaje de alquiler y el agente queda en pausa', async () => {
+  let r;
+  const llm = scriptedLlm(
+    async (h) => { await h.get_property({ referencia: P.aurea }); return 'Te paso la ficha. ¿Me dirías tu nombre?'; },
+    async (h) => { r = await h.derivar_a_humano({ motivo: 'alquiler', resumen: `Consulta por el alquiler Aurea Fisherton (cód. Tokko ${P.aurea})`, nombre: 'Laura' }); return config.MSG_ALQUILER_DERIVADO; },
+  );
+  const o1 = await core.handleMessage(msg('me interesa Aurea'), { llm });
+  assert.equal(o1.state.followup, null, 'en alquiler no hay seguimiento');
+  const o2 = await core.handleMessage(msg('Soy Laura'), { llm });
+  assert.ok(r.includes(config.MSG_ALQUILER_DERIVADO), 'la herramienta le dicta el mensaje de alquiler');
+  assert.equal(o2.actions[0].payload.texto, `(ATENCIÓN HUMANA - alquiler) Consulta por el alquiler Aurea Fisherton (cód. Tokko ${P.aurea}) - Laura - +${WA}`);
+  assert.equal(o2.state.paused, true);
 });

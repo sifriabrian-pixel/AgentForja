@@ -22,7 +22,7 @@ Base: clon adaptado de `kw-paraguay` (mismo core, misma cola por número, mismo 
 | `src/webhook.js` | Entrada: mensajes, echoes de coexistencia y comandos `#pausa` / `#reanudar` |
 | `src/test-adapter.js` | Adapter de test/QA: core real sobre SQLite en memoria, sin enviar nada |
 | `src/repo.js` / `src/db.js` | SQLite (WAL) y migraciones en `db/migrations/*.sql` |
-| `qa/casos.js` + `qa/run.js` | Los 23 casos de QA (15 del §11 + 8 del cliente) contra el Claude real |
+| `qa/casos.js` + `qa/run.js` | Los 26 casos de QA (15 del §11 + 11 del cliente) contra el Claude real |
 
 ## Cambios del cliente sobre la spec
 
@@ -32,7 +32,11 @@ Base: clon adaptado de `kw-paraguay` (mismo core, misma cola por número, mismo 
 - **Alquiler temporario**: fechas de ingreso y salida + cantidad de personas → `derivar_alquiler_temporario`. Nunca se confirma disponibilidad de fechas.
 - **Requisitos de alquiler**: solo desde la ficha. No se preguntan garantía ni mascotas. Si la ficha no dice nada de mascotas: "En principio sí, te lo confirma el asesor".
 - **Derivación de calidad**: una búsqueda solo sale con tipo, zona y dormitorios completos (el presupuesto puede quedar "a confirmar"). El brief va solo en un mensaje, listo para reenviar; `Origen:` va en un segundo mensaje.
-- **Seguimiento**: un solo mensaje **al día siguiente** al lead que no contestó (por ejemplo, después de recibir la ficha). Sale a las 23 h (`FOLLOWUP_HOURS`), dentro de la ventana de 24 hs, así va como mensaje común y sin plantilla. Si recibió una ficha, el texto la retoma; si no, es la frase de Alejandro. `FOLLOWUP_DAYS` permite varios toques en días.
+- **Unidad en venta (flujo de Forja, oct 2026)**: ficha → nombre → "¿La buscás para vivir o como inversión?" → "¿Disponés del presupuesto o necesitás vender para comprar?" → si dispone, "¿Sería apto crédito o de contado?" y "¿Te interesa coordinar una visita?"; si necesita vender, "¿Te interesa visitarla o tenés alguna duda?". El aviso de visita lleva destino y forma de pago.
+- **Preguntas sin respuesta en la ficha**: el agente no dice que no tiene el dato; deriva a Alejandro (`derivar_a_humano`) para que intervenga.
+- **Unidad en alquiler**: ficha y nombre; con el nombre se deriva directo a Alejandro y no hay más preguntas ni seguimiento. El temporario sigue pidiendo fechas y personas.
+- **Seguimiento**: solo para quien recibió la ficha de una unidad **en venta** y no contestó. Un único mensaje, "¿Pudiste ver la ficha? ¿Se ajusta a lo que buscás?", a las 23 h (`FOLLOWUP_HOURS`), dentro de la ventana de 24 hs: sale como mensaje común, sin plantilla. Si cae fuera de la franja (9 a 20) se adelanta a las 19:50. Si el lead contesta, se cancela.
+- **Coexistencia**: si Alejandro escribe a mano en un chat, el agente corta el flujo en esa conversación hasta `#reanudar` (`ECHO_PAUSE_HOURS=0`).
 - **Aviso a Alejandro, esquema híbrido**: si Alejandro le escribió al número en las últimas 24 hs, el brief sale como texto libre. Si no, sale la plantilla `HANDOFF_TEMPLATE_NAME` con el brief y el botón "Recibir para reenviar"; cuando toca el botón (o escribe cualquier cosa) recibe en limpio todos los pendientes. Los briefs se guardan en SQLite y cada uno se entrega una sola vez.
 - **Lead que escribe en pausa**: si el agente está en pausa y ninguna persona le respondió al lead desde el número de Forja, se le avisa a Alejandro ("El lead X volvió a escribir: …"), una vez por pausa.
 - **Ver otra unidad publicada**: el agente pasa el link de la web ya filtrado (`?operation=Alquiler`, y `&city=` si conoce la ciudad).
@@ -48,8 +52,8 @@ Base: clon adaptado de `kw-paraguay` (mismo core, misma cola por número, mismo 
 - **Presupuesto**: en cuanto el agente lo preguntó una vez, el código le prohíbe volver a preguntarlo.
 - **Derivaciones idempotentes**: `UNIQUE (lead, clave)`. Si el lead repite el pedido no sale otro brief. Si el envío falla se reintenta cada 5 minutos (hasta 5 veces). Con la ventana de Alejandro cerrada nunca se manda texto libre: plantilla, o espera a que escriba.
 - **Búsqueda**: solo compra, y no se deriva sin tipo, zona y dormitorios. Lo único que puede ir como `a confirmar` es el presupuesto.
-- **Pausa**: después de `derivar_a_humano`, de un echo (una persona escribió desde el número) o de `#pausa`, el agente no responde en ese chat. Los mensajes del lead quedan en el historial.
-- **Seguimiento**: una sola fila por lead, con tantos toques como tenga `FOLLOWUP_DAYS` (hoy uno) y nunca más; se toma con un `claim` antes de enviar, así que no hay doble envío aunque el job corra dos veces. Se cancela si el lead escribe (y se reprograma con la respuesta siguiente) y no existe para derivados, colegas ni quien pidió no ser contactado. Fuera de la ventana de 24 hs solo sale por plantilla: sin `FOLLOWUP_TEMPLATE_NAME` no se manda nada.
+- **Pausa**: después de `derivar_a_humano` (24 hs), de `#pausa` o de un echo (Alejandro escribió a mano desde el número, sin vencimiento hasta `#reanudar`), el agente no responde en ese chat. Los mensajes del lead quedan en el historial.
+- **Seguimiento**: una sola fila por lead, se programa solo en el turno en que se manda la ficha de una unidad en venta y se toma con un `claim` antes de enviar (no hay doble envío aunque el job corra dos veces). Se cancela si el lead escribe y no existe para alquileres, derivados, colegas ni quien pidió no ser contactado. Fuera de la ventana de 24 hs solo sale por plantilla: sin `FOLLOWUP_TEMPLATE_NAME` no se manda nada.
 - **Duplicados y redeploy**: igual que KW (`wa_message_id` UNIQUE, pendientes retomados al arrancar).
 
 ## Tokko
@@ -70,8 +74,8 @@ npm start
 ## Tests y QA
 
 ```bash
-npm test      # 70 tests, sin red (Claude falso, WhatsApp capturado)
-npm run qa    # los 23 casos de QA contra el Claude real (necesita ANTHROPIC_API_KEY)
+npm test      # 87 tests, sin red (Claude falso, WhatsApp capturado)
+npm run qa    # los 26 casos de QA contra el Claude real (necesita ANTHROPIC_API_KEY)
 ```
 
 ## Meta directo o Kapso
@@ -103,7 +107,7 @@ El webhook de Kapso puede ser tipo **meta** (reenvía el formato de Meta) o tipo
 | 3 | Aprobar en Meta la plantilla de aviso a Alejandro (texto en `docs/plantillas-meta.md`). Sin ella, con la ventana cerrada el brief queda guardado hasta que Alejandro escriba | `HANDOFF_TEMPLATE_NAME` |
 | 4 | Aprobar en Meta la plantilla de seguimiento (mismo documento) | `FOLLOWUP_TEMPLATE_NAME` |
 | 5 | Número de Forja y credenciales de Meta. Si es el mismo número que usa Alejandro (coexistencia): suscribir el campo `smb_message_echoes` del webhook y confirmar que los mensajes del propio agente no vuelven como echo | `WHATSAPP_*` |
-| 6 | Correr `npm run qa` con la API key de Anthropic y revisar los 23 casos | `ANTHROPIC_API_KEY` |
+| 6 | Correr `npm run qa` con la API key de Anthropic y revisar los 26 casos | `ANTHROPIC_API_KEY` |
 | 7 | Apagar `#reiniciar` | `config.pruebas` |
 | 8 | Las preguntas del §10 que el cliente todavía no respondió (hoy con sus valores por defecto) | `config/forja.js` |
 | 9 | Confirmar con la API key los nombres de los tipos de operación de Tokko ("Alquiler temporario" es un tipo propio) | `config.tokko.operaciones` |

@@ -10,8 +10,8 @@ const config = require('../config/forja');
 
 const caso = (id) => casos.find((c) => c.id === id);
 
-test('están los 24 casos: 15 de la spec (§11) y 9 que sumó el cliente', () => {
-  assert.deepEqual(casos.map((c) => c.id), Array.from({ length: 24 }, (_, i) => i + 1));
+test('están los 26 casos: 15 de la spec (§11) y 11 que sumó el cliente', () => {
+  assert.deepEqual(casos.map((c) => c.id), Array.from({ length: 26 }, (_, i) => i + 1));
 });
 
 test('el arnés corre un caso de punta a punta y evalúa sus chequeos', async () => {

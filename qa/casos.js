@@ -44,20 +44,25 @@ const VISITA_AYACUCHO = [
 module.exports = [
   {
     id: 1,
-    nombre: 'Depto de Puerto Norte: le gusta y pide visitar',
+    nombre: 'Unidad en venta: ficha, califica (vivir, presupuesto, crédito o contado) y pide visita',
     pasos: [
-      { lead: `Hola, me interesa el depto de Puerto Norte ${LINK.puertoNorte}` },
-      { lead: 'Soy Carla. ¿Tiene cochera?' },
-      { lead: 'Me gusta, quiero ir a verlo' },
-      { lead: 'Puedo martes o jueves después de las 17' },
+      { lead: `Hola, me interesa esta propiedad ${LINK.ayacucho}` },
+      { lead: 'Soy Carla' },
+      { lead: 'Para vivir' },
+      { lead: 'Sí, dispongo del presupuesto' },
+      { lead: 'De contado' },
+      { lead: 'Sí, quiero visitarla' },
+      { lead: 'Martes o jueves después de las 17' },
     ],
     checks: (x) => [
       c(/buen[oa]s (d[ií]as|tardes|noches)/i.test(x.respuestas[0]) && /nombre/i.test(x.respuestas[0]), 'saluda según la hora y pide el nombre'),
-      c(/s[ií]|cochera/i.test(x.respuestas[1]), 'responde la cochera con el dato de Tokko'),
+      c(/vivir|inversi[oó]n/i.test(x.respuestas[1]), 'pregunta vivir o inversión'),
+      c(/presupuesto|vender/i.test(x.respuestas[2]), 'pregunta si dispone del presupuesto o necesita vender'),
+      c(/cr[eé]dito|contado/i.test(x.respuestas[3]), 'pregunta apto crédito o contado'),
+      c(/visita/i.test(x.respuestas[4]), 'pregunta si quiere visitarla'),
       c(alguna(x.todas, /d[ií]as y horarios/i), 'pide disponibilidad antes de derivar'),
-      c(x.briefs('visita').length === 1 && /^\(VISITA ALQUILER\).*11170708/.test(x.briefs('visita')[0]), 'deriva la visita con el formato §5.2'),
-      c(/martes/i.test(x.briefs('visita')[0] || ''), 'el brief lleva la disponibilidad'),
-      c(x.todas[x.todas.length - 1].includes(config.MSG_VISITA_DERIVADA), 'le dice al lead la frase de Alejandro'),
+      c(x.briefs('visita').length === 1 && /Destino: vivienda/.test(x.briefs('visita')[0]) && /Pago: [^-]*contado/i.test(x.briefs('visita')[0]), 'el aviso lleva destino y forma de pago'),
+      c(!alguna(x.todas, /en qu[eé] plazo/i), 'no pregunta el plazo'),
     ],
   },
   {
@@ -97,7 +102,7 @@ module.exports = [
   },
   {
     id: 4,
-    nombre: 'Declina: "no, gracias, solo miraba"',
+    nombre: 'Declina una unidad en venta: "no, gracias, solo miraba"',
     pasos: [
       { lead: `Hola, vi este depto ${LINK.ayacucho}` },
       { lead: 'Soy Diego. No, es muy caro para mí' },
@@ -105,26 +110,23 @@ module.exports = [
     ],
     checks: (x) => [
       c(x.acciones.length === 0, 'no deriva nada'),
-      c(x.state.followup?.status === 'pending', 'queda el seguimiento programado'),
-      c(x.eventos.some((e) => e.type === 'seguimiento_pedido'), 'el agente llamó a programar_seguimiento'),
+      c(!x.state.followup || x.state.followup.status !== 'pending', 'contestó: no queda seguimiento programado'),
       c(cuantas(x.respuestas.slice(2), /\?/) === 0, 'cierra sin seguir preguntando'),
     ],
   },
   {
     id: 5,
-    nombre: 'Responde al seguimiento: "sí, busco 2 dorm en Fisherton"',
+    nombre: 'Recibe la ficha y no contesta: seguimiento al día siguiente',
     pasos: [
       { lead: `Hola, vi este depto ${LINK.ayacucho}` },
-      { lead: 'Soy Diego. No, gracias, solo miraba' },
-      { dias: 5 },
-      { lead: 'Sí, busco un departamento de 2 dormitorios en Fisherton, para comprar' },
-      { lead: 'Sin nada excluyente' },
-      { lead: 'Todavía no tengo definido el presupuesto' },
+      { dias: 1 },
+      { lead: 'Hola, sí la vi. Me interesa, soy Diego' },
     ],
     checks: (x) => [
-      c(/b[uú]squeda activa/i.test(x.respuestas[2] || ''), 'a los 5 días sale el mensaje de seguimiento'),
-      c(x.briefs('busqueda').length === 1 && /2 dormitorios/.test(x.briefs('busqueda')[0]) && /Fisherton/.test(x.briefs('busqueda')[0]), 'entra en modo búsqueda y deriva'),
+      c(/pudiste ver la ficha/i.test(x.respuestas[1] || '') && /se ajusta a lo que busc[aá]s/i.test(x.respuestas[1] || ''), 'al día siguiente sale "¿Pudiste ver la ficha? ¿Se ajusta a lo que buscás?"'),
       c(x.acciones.filter((a) => a.type === 'send_followup').length === 1, 'un solo seguimiento'),
+      c(x.acciones.find((a) => a.type === 'send_followup')?.payload.via === 'texto', 'sale como mensaje común (dentro de las 24 h, sin plantilla)'),
+      c(Boolean(x.respuestas[2]), 'cuando contesta, el agente sigue la conversación'),
     ],
   },
   {
@@ -180,14 +182,15 @@ module.exports = [
   },
   {
     id: 10,
-    nombre: 'Pide un dato que no está en Tokko (expensas)',
+    nombre: 'Pide un dato que no está en Tokko (expensas): no dice que no lo tiene, deriva',
     pasos: [
       { lead: `Hola, consulto por ${LINK.ayacucho}` },
       { lead: 'Soy Flor. ¿Cuánto paga de expensas?' },
     ],
     checks: (x) => [
       c(!/\$\s?\d|\d{2,3}\.\d{3}|\d+ mil/i.test(x.respuestas[1]), 'no inventa un monto de expensas'),
-      c(/asesor/i.test(x.respuestas[1]), 'ofrece confirmarlo con un asesor'),
+      c(!/no (tengo|cuento|figura|est[aá] (cargad|en la ficha))|no s[eé]|no dispongo/i.test(x.respuestas[1]), 'no dice que no tiene la información'),
+      c(x.briefs('humano').length === 1, 'deriva a Alejandro para que intervenga'),
     ],
   },
   {
@@ -254,18 +257,18 @@ module.exports = [
   // ── Casos sumados con las respuestas del cliente ──────────────────────────
   {
     id: 16,
-    nombre: 'Declina un alquiler: no se arma búsqueda',
+    nombre: 'Declina un alquiler: no se arma búsqueda ni hay seguimiento',
     pasos: [
       { lead: `Hola, consulto por este depto ${LINK.aurea}` },
-      { lead: 'Soy Nadia. Uh, es mucho para mí, no llego' },
+      { lead: 'Uh, es mucho para mí, no llego' },
       { lead: 'No, gracias, sigo buscando por mi cuenta' },
     ],
     checks: (x) => [
       c(!alguna(x.todas, QUE_BUSCAS), 'no pregunta "¿qué estás buscando?"'),
       c(/otra (unidad|propiedad|opci[oó]n)|otras (unidades|propiedades|opciones)|publicad/i.test(x.respuestas[1]), 'pregunta si le interesa ver otra unidad publicada'),
       c(!alguna(x.todas, /en qu[eé] zona|cu[aá]ntos dormitorios/i) && !alguna(x.todas, PREGUNTA_PRESUPUESTO), 'no releva zona, dormitorios ni presupuesto'),
-      c(x.acciones.length === 0, 'no deriva nada (ni búsqueda ni humano)'),
-      c(x.state.followup?.status === 'pending', 'cierra cordial y queda el seguimiento'),
+      c(x.briefs('busqueda').length === 0, 'no arma búsqueda'),
+      c(!x.state.followup || x.state.followup.status !== 'pending', 'en alquiler no hay seguimiento'),
     ],
   },
   {
@@ -299,15 +302,16 @@ module.exports = [
   },
   {
     id: 19,
-    nombre: 'Pregunta por mascotas en una ficha que no dice nada',
+    nombre: 'Alquiler: pregunta por mascotas (la ficha no dice nada) y al dar el nombre se deriva',
     pasos: [
       { lead: `Hola, consulto por este alquiler ${LINK.puertoNorte}` },
       { lead: 'Soy Julia. ¿Aceptan mascotas? Tengo un gato' },
     ],
     checks: (x) => [
       c(/en principio s[ií]/i.test(x.respuestas[1]), 'responde "En principio sí"'),
-      c(/confirma (el|un) asesor|asesor (te )?lo confirma/i.test(x.respuestas[1]), '"te lo confirma el asesor"'),
-      c(x.briefs('humano').length === 0, 'no hace falta derivar a humano por esto'),
+      c(/asesor/i.test(x.respuestas[1]), 'menciona que sigue un asesor'),
+      c(x.briefs('humano').length === 1 && /^\(ATENCIÓN HUMANA - alquiler\)/.test(x.briefs('humano')[0]), 'con el nombre, deriva el alquiler a Alejandro'),
+      c(!/vivir|inversi[oó]n|presupuesto|visita/i.test(x.respuestas[1]), 'no sigue con preguntas de calificación'),
     ],
   },
   {
@@ -388,12 +392,13 @@ module.exports = [
   },
   {
     id: 24,
-    nombre: 'Consulta por una unidad en venta: presenta, pregunta destino, plazo y recién después ofrece visita',
+    nombre: 'Venta con crédito: presenta, califica y recién después ofrece visita',
     pasos: [
       { lead: `Me interesa esta propiedad, ${LINK.ayacucho}` },
       { lead: 'Soy Martina' },
       { lead: 'Para vivir' },
-      { lead: 'En unos 3 meses' },
+      { lead: 'Dispongo del presupuesto' },
+      { lead: 'Con crédito' },
       { lead: 'Sí, coordinemos una visita' },
       { lead: 'El jueves a la tarde' },
     ],
@@ -403,10 +408,44 @@ module.exports = [
         c(/^buen[oa]s (d[ií]as|tardes|noches)/i.test(x.respuestas[0]) && /nombre/i.test(x.respuestas[0]), 'el primer mensaje saluda según la hora y pide el nombre'),
         c(!/d[ií]as y horarios|visita/i.test(x.respuestas[0]), 'no ofrece visita en el primer mensaje'),
         c(/vivir|inversi[oó]n/i.test(x.respuestas[1]), 'pregunta si es para vivir o inversión'),
-        c(/plazo|cu[aá]ndo|3 meses|6/i.test(x.respuestas[2]), 'pregunta en qué plazo piensa comprar'),
-        c(/visita/i.test(x.respuestas[3]), 'después ofrece dudas o coordinar una visita'),
-        c(/Destino: vivienda/.test(brief) && /Plazo: [^-]*3 meses/.test(brief), 'el brief de visita lleva destino y plazo'),
+        c(/presupuesto|vender/i.test(x.respuestas[2]), 'pregunta si dispone del presupuesto o necesita vender'),
+        c(/cr[eé]dito|contado/i.test(x.respuestas[3]), 'pregunta apto crédito o contado'),
+        c(/visita/i.test(x.respuestas[4]), 'después ofrece coordinar una visita'),
+        c(/Destino: vivienda/.test(brief) && /Pago: [^-]*cr[eé]dito/i.test(brief), 'el brief de visita lleva destino y forma de pago'),
       ];
     },
+  },
+  {
+    id: 25,
+    nombre: 'Venta: necesita vender para comprar',
+    pasos: [
+      { lead: `Hola, me interesa ${LINK.ayacucho}` },
+      { lead: 'Soy Pablo' },
+      { lead: 'Para vivir' },
+      { lead: 'Necesito vender mi departamento para comprar' },
+      { lead: 'Quiero visitarla' },
+      { lead: 'El sábado a la mañana' },
+    ],
+    checks: (x) => [
+      c(/visit/i.test(x.respuestas[3]) && /duda/i.test(x.respuestas[3]), 'pregunta "¿Te interesa visitarla o tenés alguna duda?"'),
+      c(!/cr[eé]dito|contado/i.test(x.respuestas[3]), 'no pregunta crédito o contado'),
+      c(x.briefs('visita').length === 1 && /Pago: [^-]*vender/i.test(x.briefs('visita')[0]), 'el aviso dice que necesita vender para comprar'),
+    ],
+  },
+  {
+    id: 26,
+    nombre: 'Unidad en alquiler: al dar el nombre se deriva directo',
+    pasos: [
+      { lead: `Hola, me interesa este alquiler ${LINK.aurea}` },
+      { lead: 'Soy Laura' },
+      { lead: '¿Y cuándo me llaman?' },
+    ],
+    checks: (x) => [
+      c(/nombre/i.test(x.respuestas[0]), 'presenta la ficha y pide el nombre'),
+      c(x.briefs('humano').length === 1 && /^\(ATENCIÓN HUMANA - alquiler\)/.test(x.briefs('humano')[0]), 'con el nombre deriva a Alejandro'),
+      c(!/vivir|inversi[oó]n|presupuesto|visita/i.test(x.respuestas[1]), 'no hace más preguntas'),
+      c(!x.respuestas[2], 'después queda en pausa: lo sigue una persona'),
+      c(!x.state.followup || x.state.followup.status !== 'pending', 'sin seguimiento'),
+    ],
   },
 ];

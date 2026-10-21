@@ -76,10 +76,10 @@ async function applyDerivarVisita(waId, input, store = repo) {
 
   const nombre = nombreDe(lead, input.nombre);
   store.mergeDatos(lead.id, { nombre: input.nombre, propiedad_id: propiedad.id });
-  const texto = briefs.briefVisita({ propiedad, disponibilidad: input.disponibilidad, destino: input.destino, plazo: input.plazo }, { waId, nombre });
+  const texto = briefs.briefVisita({ propiedad, disponibilidad: input.disponibilidad, destino: input.destino, pago: input.pago }, { waId, nombre });
   const { creada } = store.createDerivacion({
     leadId: lead.id, tipo: 'visita', clave: `visita:${propiedad.id}`, destino: config.HANDOFF_WHATSAPP, texto,
-    datos: { propiedad_id: propiedad.id, disponibilidad: input.disponibilidad || null, destino: input.destino || null, plazo: input.plazo || null },
+    datos: { propiedad_id: propiedad.id, disponibilidad: input.disponibilidad || null, destino: input.destino || null, pago: input.pago || null },
   });
   if (!creada) return 'Ese pedido de visita ya estaba derivado (no se volvió a enviar). Decile que su pedido ya está en manos del asesor y que lo va a contactar.';
   store.cancelFollowup(lead.id, 'derivado');
@@ -160,6 +160,7 @@ function applyDerivarAHumano(waId, input, store = repo) {
   store.pause(lead.id, hasta, 'derivado_a_humano');
 
   if (!creada) return 'Ya estaba derivado a una persona (no se volvió a enviar). Decile que un asesor ya tiene su consulta y lo va a contactar.';
+  if (motivo === 'alquiler') return `Derivado. Respondele exactamente esto: "${config.MSG_ALQUILER_DERIVADO}" y no hagas más preguntas.`;
   return 'Derivado a una persona. Avisale en un mensaje breve que lo va a contactar un asesor. No respondas la consulta ni prometas horarios.';
 }
 
@@ -245,7 +246,7 @@ function buildContext(lead, filas, store = repo) {
 
   const ultimoSaliente = salientes[salientes.length - 1];
   if (ultimoSaliente?.type === 'followup') {
-    lineas.push('- Tu último mensaje fue el de seguimiento ("¿tenés alguna búsqueda activa...?"). Si responde con interés: si quiere comprar, modo búsqueda; si quiere alquilar, zona y fechas y derivar_a_humano con motivo "alquiler".');
+    lineas.push('- Tu último mensaje fue el de seguimiento ("¿Pudiste ver la ficha? ¿Se ajusta a lo que buscás?"). Si le interesa la unidad, seguí con la calificación de venta donde quedó; si no le sirve, pasá a BÚSQUEDA.');
   }
   if (lead.datos.no_contactar) lineas.push('- Pidió que no lo contacten: respondé solo lo que pregunte, sin proponer nada.');
   return lineas.join('\n');
@@ -361,9 +362,12 @@ function registerEcho(input, { store = repo } = {}) {
     const ts = clock.nowISO();
     const nuevo = store.insertEcho({ waId, leadId: lead.id, waMessageId: input.messageId || `echo.${crypto.randomUUID()}`, body: input.text || '[mensaje sin texto]', createdAt: ts });
     if (!nuevo) return { pausado: false, lead };
-    const hasta = new Date(new Date(ts).getTime() + config.HUMAN_TAKEOVER_HOURS * HORA).toISOString();
-    // Una pausa manual sin vencimiento (#pausa) no se acorta por un echo.
-    if (!lead.paused_until || lead.paused_until < hasta) store.pause(lead.id, hasta, 'echo', ts);
+    // Coexistencia: Alejandro escribió a mano. Por defecto el agente corta el
+    // flujo en ese chat hasta #reanudar (ECHO_PAUSE_HOURS = 0).
+    const horas = config.ECHO_PAUSE_HOURS;
+    const hasta = horas ? new Date(new Date(ts).getTime() + horas * HORA).toISOString() : null;
+    // Una pausa más larga (manual o sin vencimiento) no se acorta por un echo.
+    if (!store.isPaused(lead) || (hasta && lead.paused_until < hasta)) store.pause(lead.id, hasta, 'echo', ts);
     return { pausado: true, lead: store.getLead(lead.id) };
   });
 }
@@ -418,7 +422,7 @@ function asegurarSaludo(texto, filas, lead) {
 // Si Claude falla: sin onLlmError, lanza. Con onLlmError(error, { lead,
 // pendientes }), el adapter decide: devuelve un texto para cerrar el turno
 // con ese mensaje, o null para dejarlo pendiente (processPending devuelve null).
-async function turno(waId, deps = {}, vuelta = 1, yaDerivadas = null) {
+async function turno(waId, deps = {}, vuelta = 1, yaDerivadas = null, fichasAntes = null) {
   const { store = repo, llm = claude, onLlmError } = deps;
   const pendientes = store.pendingInbound(waId);
   let lead = store.getCurrentLead(waId);
@@ -433,6 +437,9 @@ async function turno(waId, deps = {}, vuelta = 1, yaDerivadas = null) {
 
   // Derivaciones que ya existían antes del turno: lo que aparezca de más, se creó acá.
   const previas = yaDerivadas || new Set(store.derivacionesDe(lead.id).map((d) => d.id));
+  // Fichas presentadas antes del turno: si en este turno se manda una, queda programado el seguimiento.
+  const contarFichas = () => store.events(lead.id).filter((e) => e.type === 'propiedad_consultada').length;
+  const fichasPrevias = fichasAntes ?? contarFichas();
 
   const filas = store.history(waId);
   const historial = toApiMessages([...filas, ...pendientes.filter((m) => m.body)]);
@@ -449,7 +456,7 @@ async function turno(waId, deps = {}, vuelta = 1, yaDerivadas = null) {
 
   // Entraron mensajes mientras Claude respondía: esa respuesta ya quedó vieja
   // (repetiría la pregunta). Se descarta y se responde todo junto.
-  if (vuelta < MAX_VUELTAS_TURNO && store.pendingInbound(waId).length > pendientes.length) return turno(waId, deps, vuelta + 1, previas);
+  if (vuelta < MAX_VUELTAS_TURNO && store.pendingInbound(waId).length > pendientes.length) return turno(waId, deps, vuelta + 1, previas, fichasPrevias);
 
   lead = store.getCurrentLead(waId);
   const nuevas = store.derivacionesDe(lead.id).filter((d) => !previas.has(d.id));
@@ -466,8 +473,10 @@ async function turno(waId, deps = {}, vuelta = 1, yaDerivadas = null) {
 
   texto = asegurarSaludo(texto, filas, lead);
 
-  // Sin derivar y sin pausa: queda programado el seguimiento por si no vuelve a escribir.
-  if (!store.isPaused(lead)) seguimiento.programar(lead, store);
+  // Seguimiento (pedido de Forja): solo para quien recibe la ficha de una unidad en
+  // venta y no contesta. Se programa en el turno en que se manda la ficha; si el
+  // lead escribe, se cancela y no se vuelve a programar.
+  if (!store.isPaused(lead) && contarFichas() > fichasPrevias) seguimiento.programar(lead, store);
 
   const outboundId = store.commitTurn({ waId, leadId: lead.id, inboundIds: pendientes.map((m) => m.id), replyText: texto });
   return { messages: [texto], actions: nuevas.map(accionAviso), state: buildState(lead, store), meta: { leadId: lead.id, outboundId } };
