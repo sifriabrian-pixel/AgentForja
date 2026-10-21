@@ -32,12 +32,16 @@ module.exports = {
   // Aviso cuando un lead en pausa vuelve a escribir y ninguna persona le respondió.
   MSG_AVISO_PAUSA: 'El lead {nombre} ({telefono}) volvió a escribir: "{mensaje}"',
 
-  // Seguimiento: días (desde la última respuesta del agente) de cada toque.
-  // Hoy es uno solo, a los 5 días. Para sumar otro: FOLLOWUP_DAYS=3,7. El
-  // cliente quiere "reflotar" al lead sin ser molesto: mantenerlo entre 3 y 7 días.
+  // Seguimiento: cuándo sale cada toque, contado desde la última respuesta del
+  // agente (por ejemplo, la ficha que el lead no contestó). Hoy es uno solo, al
+  // día siguiente: a las 23 h, todavía dentro de la ventana de 24 hs de WhatsApp,
+  // así sale como mensaje común, sin plantilla ni costo (pedido de Brian, 2026-10-21).
+  // FOLLOWUP_HOURS=23 (por defecto) o FOLLOWUP_DAYS=1,5 para varios toques en días;
+  // FOLLOWUP_DAYS, si está, manda. Devuelve siempre días.
   get FOLLOWUP_DAYS() {
-    const dias = String(env('FOLLOWUP_DAYS', '5')).replace(/[^\d.,]/g, '').split(',').map(Number).filter((n) => Number.isFinite(n) && n > 0);
-    return dias.length ? dias.sort((a, b) => a - b) : [5];
+    const lista = (v) => String(v).replace(/[^\d.,]/g, '').split(',').map(Number).filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
+    const dias = env('FOLLOWUP_DAYS', '') ? lista(env('FOLLOWUP_DAYS', '')) : lista(env('FOLLOWUP_HOURS', '23')).map((h) => h / 24);
+    return dias.length ? dias : [23 / 24];
   },
   get FOLLOWUP_TEMPLATE_NAME() { return env('FOLLOWUP_TEMPLATE_NAME', ''); },
   seguimiento: {
@@ -51,6 +55,8 @@ module.exports = {
   },
   // Dentro de la ventana de 24 hs (texto libre, con el saludo según la hora):
   MSG_SEGUIMIENTO: '{saludo} ¿cómo estás? Te saluda {identidad} ¿tenés alguna búsqueda activa en la que podamos ayudarte?',
+  // [DEFAULT] Si lo último que recibió fue la ficha de una unidad, el seguimiento la retoma.
+  MSG_SEGUIMIENTO_FICHA: '{saludo} ¿cómo estás? Te saluda {identidad}. ¿Pudiste ver la ficha que te pasé? Si te interesa, coordinamos una visita; y si no es lo que buscás, contame qué estás buscando y te ayudo.',
   // Fuera de la ventana sale la plantilla aprobada. Tiene que decir lo mismo que
   // la plantilla cargada en Meta (docs/plantillas-meta.md): es lo que queda en el historial.
   MSG_SEGUIMIENTO_PLANTILLA: 'Hola ¿cómo estás? Te saluda {identidad} ¿tenés alguna búsqueda activa en la que podamos ayudarte?',

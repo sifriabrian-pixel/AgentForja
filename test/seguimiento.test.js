@@ -18,20 +18,46 @@ async function tick(now, { ok = true } = {}) {
   return { ...out, followup: repo.getFollowup(repo.getCurrentLead(WA).id) };
 }
 
-beforeEach(() => freshDb());
+// Estos tests fijan el seguimiento en 5 días; el valor por defecto (23 h) tiene su propio test.
+beforeEach(() => { process.env.FOLLOWUP_DAYS = '5'; return freshDb(); });
 afterEach(() => {
   delete process.env.FOLLOWUP_TEMPLATE_NAME;
   delete process.env.FOLLOWUP_DAYS;
 });
 
-test('FOLLOWUP_DAYS es una lista; por defecto un solo toque a los 5 días', () => {
-  assert.deepEqual(config.FOLLOWUP_DAYS, [5]);
+test('por defecto un solo toque a las 23 h; FOLLOWUP_HOURS o FOLLOWUP_DAYS lo cambian', () => {
+  delete process.env.FOLLOWUP_DAYS;
+  assert.deepEqual(config.FOLLOWUP_DAYS, [23 / 24]);
+  process.env.FOLLOWUP_HOURS = '23, 72';
+  assert.deepEqual(config.FOLLOWUP_DAYS, [23 / 24, 3]);
+  delete process.env.FOLLOWUP_HOURS;
   process.env.FOLLOWUP_DAYS = '7, 3';
-  assert.deepEqual(config.FOLLOWUP_DAYS, [3, 7]);
+  assert.deepEqual(config.FOLLOWUP_DAYS, [3, 7], 'FOLLOWUP_DAYS manda');
   process.env.FOLLOWUP_DAYS = '[3,7]';
   assert.deepEqual(config.FOLLOWUP_DAYS, [3, 7]);
   process.env.FOLLOWUP_DAYS = 'cualquier cosa';
-  assert.deepEqual(config.FOLLOWUP_DAYS, [5]);
+  assert.deepEqual(config.FOLLOWUP_DAYS, [23 / 24]);
+});
+
+test('recibió la ficha y no contestó: al día siguiente le escribe retomando la ficha, como mensaje común', async () => {
+  delete process.env.FOLLOWUP_DAYS; // valor por defecto: 23 h
+  const llm = scriptedLlm(async (h) => { await h.get_property({ referencia: P.ayacucho }); return 'Te paso la ficha. ¿Me dirías tu nombre?'; });
+  const o1 = await core.handleMessage(msg('me interesa el de Ayacucho'), { llm });
+  assert.equal(o1.state.followup.dueAt, masHoras(T0, 23));
+
+  assert.deepEqual((await tick(masHoras(T0, 22))).actions, [], 'todavía no');
+  const out = await tick(masHoras(T0, 23));
+  assert.equal(out.actions[0].payload.via, 'texto', 'dentro de la ventana de 24 h: sin plantilla');
+  assert.match(out.messages[0], /^Buenas tardes ¿cómo estás\? Te saluda el asistente de Forja Propiedades\. ¿Pudiste ver la ficha que te pasé\?/);
+  assert.equal(out.followup.status, 'sent');
+  assert.deepEqual((await tick(masHoras(T0, 47))).actions, [], 'un solo seguimiento');
+});
+
+test('sin ficha de por medio, el seguimiento usa la frase de Alejandro', async () => {
+  delete process.env.FOLLOWUP_DAYS;
+  await core.handleMessage(msg('hola, busco algo en Fisherton'), { llm: scriptedLlm('¿Estás buscando para comprar o para alquilar?') });
+  const out = await tick(masHoras(T0, 23));
+  assert.match(out.messages[0], /¿tenés alguna búsqueda activa en la que podamos ayudarte\?$/);
 });
 
 test('cada respuesta del agente programa el seguimiento a 5 días; si el lead escribe, se corre', async () => {

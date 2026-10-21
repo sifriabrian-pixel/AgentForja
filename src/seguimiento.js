@@ -25,8 +25,11 @@ function saludo(fecha = clock.date()) {
   return 'Buenas noches';
 }
 
-function textoSeguimiento() {
-  return config.MSG_SEGUIMIENTO.replace('{saludo}', saludo()).replace('{identidad}', config.AGENT_IDENTITY);
+// Si el lead consultó por una unidad (recibió su ficha), el mensaje la retoma;
+// si no, es la frase de Alejandro ("¿tenés alguna búsqueda activa…?").
+function textoSeguimiento(lead = null) {
+  const base = lead?.datos?.propiedad_id ? config.MSG_SEGUIMIENTO_FICHA : config.MSG_SEGUIMIENTO;
+  return base.replace('{saludo}', saludo()).replace('{identidad}', config.AGENT_IDENTITY);
 }
 
 // A quién no se le hace seguimiento.
@@ -76,7 +79,7 @@ function decidir(followup, lead, store = repo) {
   const h = horaLocal(ahora);
   if (h < desde || h >= hasta) return { accion: 'esperar', motivo: 'fuera_de_franja' };
 
-  const texto = textoSeguimiento();
+  const texto = textoSeguimiento(lead);
   const enVentana = lead.last_inbound_at && ahora - new Date(lead.last_inbound_at) < DIA;
   if (enVentana) return { accion: 'enviar', via: 'texto', texto };
 
